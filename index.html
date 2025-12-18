@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Tukar Kado</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .section {
+            background-color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        h2 {
+            color: #2575fc;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .input-group {
+            display: flex;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 15px;
+            border: 2px solid #e1e5ee;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            border-color: #2575fc;
+            outline: none;
+        }
+        
+        button {
+            background-color: #2575fc;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        
+        button:hover {
+            background-color: #1a68e8;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button.secondary {
+            background-color: #6c757d;
+        }
+        
+        button.secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        button.danger {
+            background-color: #dc3545;
+        }
+        
+        button.danger:hover {
+            background-color: #c82333;
+        }
+        
+        .participant-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .participant-card {
+            background-color: #f8f9fa;
+            border-left: 5px solid #2575fc;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .participant-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .remove-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 5px 10px;
+        }
+        
+        .results {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .result-item {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border-left: 5px solid #28a745;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .giver {
+            font-weight: 600;
+            color: #2575fc;
+        }
+        
+        .receiver {
+            font-weight: 600;
+            color: #28a745;
+        }
+        
+        .instructions {
+            background-color: #e7f3ff;
+            border-left: 5px solid #2575fc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        
+        .instructions h3 {
+            color: #2575fc;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            input, button {
+                width: 100%;
+            }
+            
+            .participant-list {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .highlight {
+            background-color: #fff3cd;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎁 Sistem Tukar Kado</h1>
+        <p class="description">Sistem acak untuk menukar kado dimana pemberi tidak akan menerima kado dari diri sendiri. Semua data disimpan di browser Anda.</p>
+    </header>
+    
+    <div class="container">
+        <section class="section">
+            <h2>Tambah Peserta</h2>
+            <p>Masukkan nama peserta yang akan ikut dalam tukar kado:</p>
+            
+            <div class="alert" id="alert"></div>
+            
+            <div class="input-group">
+                <input type="text" id="participantName" placeholder="Masukkan nama peserta">
+                <button id="addParticipant">Tambah Peserta</button>
+            </div>
+            
+            <div id="participantsContainer">
+                <h3>Daftar Peserta (<span id="participantCount">0</span> orang)</h3>
+                <div class="participant-list" id="participantList">
+                    <!-- Daftar peserta akan muncul di sini -->
+                </div>
+            </div>
+            
+            <div class="input-group" style="margin-top: 20px;">
+                <button id="clearAll" class="secondary">Hapus Semua Peserta</button>
+                <button id="generatePairs" style="margin-left: auto;">Acak Tukar Kado</button>
+            </div>
+        </section>
+        
+        <section class="section" id="resultsSection">
+            <h2>Hasil Tukar Kado</h2>
+            <p>Setiap orang di bawah ini akan memberikan kado kepada orang yang ditentukan. Hasil ini hanya akan ditampilkan sekali untuk menjaga kejutan!</p>
+            
+            <div id="results" class="results">
+                <!-- Hasil akan muncul di sini -->
+            </div>
+            
+            <div id="noResultsMessage">
+                <p>Belum ada hasil yang dihasilkan. Tambahkan peserta dan klik "Acak Tukar Kado".</p>
+            </div>
+            
+            <div class="input-group" style="margin-top: 20px;">
+                <button id="resetResults" class="secondary">Reset Hasil</button>
+                <button id="showResults" class="secondary">Tampilkan Hasil Lagi</button>
+                <button id="hideResults" class="secondary">Sembunyikan Hasil</button>
+            </div>
+        </section>
+        
+        <section class="instructions">
+            <h3>Cara Menggunakan</h3>
+            <ol>
+                <li>Tambahkan nama semua peserta yang akan ikut tukar kado menggunakan form di atas.</li>
+                <li>Pastikan jumlah peserta minimal 2 orang.</li>
+                <li>Klik tombol <span class="highlight">"Acak Tukar Kado"</span> untuk menghasilkan pasangan pemberi dan penerima.</li>
+                <li>Sistem akan memastikan bahwa tidak ada orang yang menerima kado dari dirinya sendiri.</li>
+                <li>Hasil hanya akan ditampilkan sekali untuk menjaga kejutan. Simpan screenshot jika diperlukan.</li>
+                <li>Semua data disimpan di browser Anda dan tidak dikirim ke server mana pun.</li>
+            </ol>
+        </section>
+    </div>
+    
+    <div class="footer">
+        <p>Sistem Tukar Kado © 2023 - Dibuat dengan HTML, CSS, dan JavaScript</p>
+        <p>Data hanya tersimpan di browser Anda dan tidak dikirim ke server mana pun.</p>
+    </div>
+
+    <script>
+        // Data peserta disimpan di array
+        let participants = [];
+        // Hasil tukar kado
+        let giftPairs = [];
+        // Status apakah hasil sudah pernah ditampilkan
+        let resultsShown = false;
+        
+        // Fungsi untuk menyimpan data ke localStorage
+        function saveToStorage() {
+            localStorage.setItem('giftExchangeParticipants', JSON.stringify(participants));
+            localStorage.setItem('giftExchangePairs', JSON.stringify(giftPairs));
+            localStorage.setItem('giftExchangeResultsShown', resultsShown);
+        }
+        
+        // Fungsi untuk memuat data dari localStorage
+        function loadFromStorage() {
+            const savedParticipants = localStorage.getItem('giftExchangeParticipants');
+            const savedPairs = localStorage.getItem('giftExchangePairs');
+            const savedResultsShown = localStorage.getItem('giftExchangeResultsShown');
+            
+            if (savedParticipants) {
+                participants = JSON.parse(savedParticipants);
+                updateParticipantList();
+            }
+            
+            if (savedPairs) {
+                giftPairs = JSON.parse(savedPairs);
+            }
+            
+            if (savedResultsShown) {
+                resultsShown = (savedResultsShown === 'true');
+                if (giftPairs.length > 0) {
+                    showResultsSection();
+                }
+            }
+        }
+        
+        // Tampilkan pesan alert
+        function showAlert(message, type) {
+            const alertEl = document.getElementById('alert');
+            alertEl.textContent = message;
+            alertEl.className = `alert alert-${type}`;
+            alertEl.style.display = 'block';
+            
+            // Sembunyikan alert setelah 5 detik
+            setTimeout(() => {
+                alertEl.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Update tampilan daftar peserta
+        function updateParticipantList() {
+            const participantList = document.getElementById('participantList');
+            const participantCount = document.getElementById('participantCount');
+            
+            participantList.innerHTML = '';
+            participantCount.textContent = participants.length;
+            
+            if (participants.length === 0) {
+                participantList.innerHTML = '<p>Belum ada peserta yang ditambahkan.</p>';
+                return;
+            }
+            
+            participants.forEach((participant, index) => {
+                const participantCard = document.createElement('div');
+                participantCard.className = 'participant-card';
+                
+                participantCard.innerHTML = `
+                    <div class="participant-name">${participant}</div>
+                    <button class="remove-btn" data-index="${index}">×</button>
+                `;
+                
+                participantList.appendChild(participantCard);
+            });
+            
+            // Tambahkan event listener untuk tombol hapus
+            document.querySelectorAll('.remove-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    removeParticipant(index);
+                });
+            });
+        }
+        
+        // Tambah peserta baru
+        function addParticipant() {
+            const nameInput = document.getElementById('participantName');
+            const name = nameInput.value.trim();
+            
+            if (name === '') {
+                showAlert('Nama peserta tidak boleh kosong!', 'error');
+                return;
+            }
+            
+            if (participants.includes(name)) {
+                showAlert(`"${name}" sudah ada dalam daftar peserta!`, 'error');
+                return;
+            }
+            
+            participants.push(name);
+            updateParticipantList();
+            saveToStorage();
+            
+            nameInput.value = '';
+            nameInput.focus();
+            
+            showAlert(`"${name}" telah ditambahkan ke daftar peserta.`, 'success');
+        }
+        
+        // Hapus peserta
+        function removeParticipant(index) {
+            const removedName = participants[index];
+            participants.splice(index, 1);
+            updateParticipantList();
+            saveToStorage();
+            
+            showAlert(`"${removedName}" telah dihapus dari daftar peserta.`, 'success');
+        }
+        
+        // Hapus semua peserta
+        function clearAllParticipants() {
+            if (participants.length === 0) {
+                showAlert('Tidak ada peserta untuk dihapus.', 'error');
+                return;
+            }
+            
+            if (confirm(`Apakah Anda yakin ingin menghapus semua ${participants.length} peserta?`)) {
+                participants = [];
+                giftPairs = [];
+                resultsShown = false;
+                updateParticipantList();
+                hideResults();
+                saveToStorage();
+                
+                showAlert('Semua peserta telah dihapus.', 'success');
+            }
+        }
+        
+        // Algoritma untuk menghasilkan pasangan tukar kado
+        function generateGiftPairs() {
+            if (participants.length < 2) {
+                showAlert('Minimal diperlukan 2 peserta untuk tukar kado.', 'error');
+                return;
+            }
+            
+            // Buat salinan daftar peserta
+            let receivers = [...participants];
+            giftPairs = [];
+            
+            // Algoritma Fisher-Yates untuk mengacak
+            for (let i = receivers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [receivers[i], receivers[j]] = [receivers[j], receivers[i]];
+            }
+            
+            // Buat pasangan pemberi-penerima
+            for (let i = 0; i < participants.length; i++) {
+                const giver = participants[i];
+                let receiver = receivers[i];
+                
+                // Pastikan tidak ada yang memberikan kado kepada diri sendiri
+                if (giver === receiver) {
+                    // Tukar dengan peserta berikutnya (dengan pengecekan indeks)
+                    const nextIndex = (i + 1) % participants.length;
+                    [receivers[i], receivers[nextIndex]] = [receivers[nextIndex], receivers[i]];
+                    receiver = receivers[i];
+                }
+                
+                giftPairs.push({
+                    giver: giver,
+                    receiver: receiver
+                });
+            }
+            
+            // Verifikasi: pastikan tidak ada yang memberikan kado kepada diri sendiri
+            const selfGift = giftPairs.find(pair => pair.giver === pair.receiver);
+            if (selfGift) {
+                // Jika masih ada yang memberikan untuk diri sendiri, coba lagi
+                return generateGiftPairs();
+            }
+            
+            resultsShown = false;
+            saveToStorage();
+            showResults();
+            showAlert('Pasangan tukar kado berhasil dihasilkan!', 'success');
+        }
+        
+        // Tampilkan hasil
+        function showResults() {
+            if (giftPairs.length === 0) {
+                showAlert('Belum ada hasil yang dihasilkan. Tambahkan peserta dan klik "Acak Tukar Kado".', 'error');
+                return;
+            }
+            
+            const resultsDiv = document.getElementById('results');
+            const noResultsMessage = document.getElementById('noResultsMessage');
+            resultsDiv.innerHTML = '';
+            
+            giftPairs.forEach(pair => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                resultItem.innerHTML = `
+                    <div>
+                        <span class="giver">${pair.giver}</span> akan memberikan kado kepada 
+                        <span class="receiver">${pair.receiver}</span>
+                    </div>
+                `;
+                resultsDiv.appendChild(resultItem);
+            });
+            
+            resultsDiv.style.display = 'block';
+            noResultsMessage.style.display = 'none';
+            showResultsSection();
+            
+            // Tandai bahwa hasil sudah ditampilkan
+            if (!resultsShown) {
+                resultsShown = true;
+                saveToStorage();
+            }
+        }
+        
+        // Sembunyikan hasil (untuk menjaga kejutan)
+        function hideResults() {
+            const resultsDiv = document.getElementById('results');
+            const noResultsMessage = document.getElementById('noResultsMessage');
+            
+            if (giftPairs.length === 0) {
+                resultsDiv.style.display = 'none';
+                noResultsMessage.style.display = 'block';
+                return;
+            }
+            
+            resultsDiv.style.display = 'none';
+            noResultsMessage.style.display = 'block';
+            
+            showAlert('Hasil telah disembunyikan untuk menjaga kejutan.', 'success');
+        }
+        
+        // Reset hasil
+        function resetResults() {
+            if (giftPairs.length === 0) {
+                showAlert('Tidak ada hasil untuk direset.', 'error');
+                return;
+            }
+            
+            if (confirm('Apakah Anda yakin ingin menghapus hasil tukar kado? Ini tidak akan menghapus daftar peserta.')) {
+                giftPairs = [];
+                resultsShown = false;
+                hideResults();
+                saveToStorage();
+                
+                showAlert('Hasil tukar kado telah direset.', 'success');
+            }
+        }
+        
+        // Tampilkan section hasil
+        function showResultsSection() {
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.style.display = 'block';
+        }
+        
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load data dari localStorage
+            loadFromStorage();
+            
+            // Event listener untuk tombol tambah peserta
+            document.getElementById('addParticipant').addEventListener('click', addParticipant);
+            
+            // Event listener untuk input peserta (Enter key)
+            document.getElementById('participantName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addParticipant();
+                }
+            });
+            
+            // Event listener untuk tombol hapus semua
+            document.getElementById('clearAll').addEventListener('click', clearAllParticipants);
+            
+            // Event listener untuk tombol generate pairs
+            document.getElementById('generatePairs').addEventListener('click', generateGiftPairs);
+            
+            // Event listener untuk tombol tampilkan hasil
+            document.getElementById('showResults').addEventListener('click', showResults);
+            
+            // Event listener untuk tombol sembunyikan hasil
+            document.getElementById('hideResults').addEventListener('click', hideResults);
+            
+            // Event listener untuk tombol reset hasil
+            document.getElementById('resetResults').addEventListener('click', resetResults);
+            
+            // Fokus ke input nama peserta saat halaman dimuat
+            document.getElementById('participantName').focus();
+        });
+    </script>
+</body>
+</html>
