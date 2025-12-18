@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil - Sistem Tukar Kado</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
+    <style>
+        .results-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .results-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .results-header {
+            background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .results-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .results-header p {
+            opacity: 0.9;
+            margin-top: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .results-content {
+            padding: 40px 30px;
+        }
+        
+        .results-info {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 5px solid #28a745;
+        }
+        
+        .results-list {
+            margin-bottom: 40px;
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+        
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .participant-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .participant-details h3 {
+            margin: 0;
+            color: #212529;
+            font-size: 1.3rem;
+        }
+        
+        .gift-number {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .empty-results {
+            text-align: center;
+            padding: 60px 30px;
+            color: #6c757d;
+        }
+        
+        .empty-results i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #adb5bd;
+        }
+        
+        .results-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        
+        .btn-print {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        
+        @media print {
+            .results-page {
+                background: white !important;
+            }
+            
+            .results-container {
+                box-shadow: none !important;
+            }
+            
+            .results-actions {
+                display: none;
+            }
+            
+            .result-card {
+                break-inside: avoid;
+                box-shadow: none !important;
+                border: 1px solid #dee2e6;
+            }
+        }
+    </style>
+</head>
+<body class="results-page">
+    <div class="results-container">
+        <div class="results-header">
+            <h1><i class="fas fa-gifts"></i> Hasil Tukar Kado</h1>
+            <p>Setiap peserta menerima kado dengan nomor berikut. Keberuntungan menentukan hadiah Anda!</p>
+        </div>
+        
+        <div class="results-content">
+            <div class="results-info">
+                <h3><i class="fas fa-info-circle"></i> Informasi Penting</h3>
+                <p>• Hasil di bawah menunjukkan nomor kado yang akan Anda terima</p>
+                <p>• Ambil kado sesuai nomor yang tertera</p>
+                <p>• Identitas pemberi dirahasiakan untuk menjaga kejutan</p>
+            </div>
+            
+            <div class="results-list" id="resultsList">
+                <!-- Hasil akan ditampilkan di sini -->
+                <div class="empty-results">
+                    <i class="fas fa-gift"></i>
+                    <h2>Belum Ada Hasil</h2>
+                    <p>Admin belum mengacak distribusi kado. Silakan kembali nanti.</p>
+                    <a href="index.html" class="btn-primary" style="margin-top: 20px;">
+                        <i class="fas fa-arrow-left"></i> Kembali ke Halaman Admin
+                    </a>
+                </div>
+            </div>
+            
+            <div class="results-actions">
+                <button id="printResults" class="btn-primary btn-print">
+                    <i class="fas fa-print"></i> Cetak Hasil
+                </button>
+                <button id="refreshResults" class="btn-secondary">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <a href="index.html" class="btn-secondary">
+                    <i class="fas fa-cog"></i> Halaman Admin
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="results.js"></script>
+</body>
+</html>

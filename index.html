@@ -3,166 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Tukar Kado via Admin</title>
+    <title>Admin - Sistem Tukar Kado</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
 </head>
 <body>
-    <header>
-        <h1><i class="fas fa-gifts"></i> Sistem Tukar Kado via Admin</h1>
-        <p class="description">Peserta memberikan kado ke admin → Admin memberi nomor → Sistem mengacak penerima → Tidak ada yang dapat kado sendiri</p>
-    </header>
-
     <div class="container">
-        <!-- Kanban Board -->
-        <div class="kanban-board">
-            <!-- Column 1: Inisialisasi -->
-            <div class="kanban-column" id="init-column">
-                <div class="column-header">
-                    <h2><i class="fas fa-user-plus"></i> 1. Inisialisasi</h2>
-                    <span class="badge" id="init-count">0</span>
-                </div>
-                <div class="column-content">
-                    <div class="input-group">
-                        <input type="text" id="participantName" placeholder="Nama peserta">
-                        <input type="text" id="giftNumber" placeholder="Nomor kado (1-100)">
-                        <button id="addParticipant" class="btn-primary">
-                            <i class="fas fa-plus"></i> Tambah
-                        </button>
-                    </div>
+        <header>
+            <h1><i class="fas fa-user-shield"></i> Admin - Sistem Tukar Kado</h1>
+            <p class="description">Masukkan nama peserta dan nomor kado yang mereka berikan. Sistem akan mengacak penerima secara rahasia.</p>
+        </header>
+
+        <main>
+            <div class="admin-panel">
+                <div class="input-section">
+                    <h2><i class="fas fa-user-plus"></i> Tambah Peserta</h2>
                     
                     <div class="alert" id="alert"></div>
                     
-                    <div class="participant-list" id="init-list">
-                        <!-- Daftar peserta di tahap inisialisasi -->
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="participantName"><i class="fas fa-user"></i> Nama Peserta</label>
+                            <input type="text" id="participantName" placeholder="Contoh: Andi">
+                        </div>
+                        
+                        <div class="input-field">
+                            <label for="giftNumber"><i class="fas fa-tag"></i> Nomor Kado</label>
+                            <input type="number" id="giftNumber" placeholder="1-999" min="1" max="999">
+                        </div>
+                        
+                        <button id="addParticipant" class="btn-primary">
+                            <i class="fas fa-plus-circle"></i> Tambah Peserta
+                        </button>
                     </div>
                     
-                    <div class="column-actions">
+                    <div class="info-box">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Setiap peserta memberikan kado ke admin dan mendapatkan nomor unik. Nantinya sistem akan mengacak siapa dapat kado nomor berapa.</p>
+                    </div>
+                </div>
+
+                <div class="participants-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-users"></i> Daftar Peserta</h2>
+                        <span class="badge" id="participantCount">0</span>
+                    </div>
+                    
+                    <div class="participants-list" id="participantsList">
+                        <!-- Daftar peserta akan muncul di sini -->
+                        <div class="empty-state">
+                            <i class="fas fa-users-slash"></i>
+                            <h3>Belum ada peserta</h3>
+                            <p>Tambahkan peserta menggunakan form di atas</p>
+                        </div>
+                    </div>
+                    
+                    <div class="actions">
                         <button id="clearAll" class="btn-secondary">
-                            <i class="fas fa-trash"></i> Hapus Semua
+                            <i class="fas fa-trash-alt"></i> Hapus Semua
                         </button>
-                        <button id="proceedToRandomize" class="btn-primary" disabled>
-                            <i class="fas fa-arrow-right"></i> Lanjut ke Acak
+                        <button id="generateResults" class="btn-primary" disabled>
+                            <i class="fas fa-random"></i> Acak & Hasilkan Hasil
                         </button>
+                        <a href="results.html" id="viewResults" class="btn-success" style="display: none;">
+                            <i class="fas fa-eye"></i> Lihat Hasil
+                        </a>
                     </div>
                 </div>
-            </div>
 
-            <!-- Column 2: Acak & Distribusi -->
-            <div class="kanban-column" id="randomize-column">
-                <div class="column-header">
-                    <h2><i class="fas fa-random"></i> 2. Acak Distribusi</h2>
-                    <span class="badge" id="random-count">0</span>
-                </div>
-                <div class="column-content">
-                    <p class="column-description">Klik tombol di bawah untuk mengacak penerima kado:</p>
-                    
-                    <div class="randomize-controls">
-                        <button id="randomizeBtn" class="btn-primary btn-large" disabled>
-                            <i class="fas fa-random"></i> Acak Penerima Kado
-                        </button>
-                        <p class="info-text">Sistem akan memastikan tidak ada yang menerima kado mereka sendiri.</p>
-                    </div>
-                    
-                    <div class="random-results" id="random-results">
-                        <!-- Hasil pengacakan akan muncul di sini -->
-                    </div>
-                    
-                    <div class="column-actions">
-                        <button id="resetRandom" class="btn-secondary" disabled>
-                            <i class="fas fa-redo"></i> Ulang Acak
-                        </button>
-                        <button id="proceedToResults" class="btn-primary" disabled>
-                            <i class="fas fa-arrow-right"></i> Lihat Hasil
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Column 3: Hasil Final -->
-            <div class="kanban-column" id="results-column">
-                <div class="column-header">
-                    <h2><i class="fas fa-list-alt"></i> 3. Hasil Final</h2>
-                    <span class="badge" id="results-count">0</span>
-                </div>
-                <div class="column-content">
-                    <div class="results-info">
-                        <p><i class="fas fa-info-circle"></i> Setiap peserta akan menerima kado dengan nomor di bawah ini.</p>
-                    </div>
-                    
-                    <div class="results-list" id="results-list">
-                        <!-- Hasil final akan muncul di sini -->
-                    </div>
-                    
-                    <div class="export-options">
-                        <button id="exportTxt" class="btn-secondary" disabled>
-                            <i class="fas fa-file-download"></i> Export TXT
-                        </button>
-                        <button id="exportJson" class="btn-secondary" disabled>
-                            <i class="fas fa-code"></i> Export JSON
-                        </button>
-                        <button id="copyResults" class="btn-secondary" disabled>
-                            <i class="fas fa-copy"></i> Salin Hasil
-                        </button>
-                    </div>
-                    
-                    <div class="column-actions">
-                        <button id="resetAll" class="btn-secondary">
-                            <i class="fas fa-home"></i> Mulai Ulang
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Panel Informasi -->
-        <div class="info-panel">
-            <div class="info-card">
-                <h3><i class="fas fa-info-circle"></i> Cara Kerja Sistem</h3>
-                <div class="steps">
-                    <div class="step">
-                        <div class="step-number">1</div>
-                        <div class="step-content">
-                            <h4>Inisialisasi</h4>
-                            <p>Setiap peserta memberikan kado ke admin dan mendapatkan nomor unik.</p>
+                <div class="instructions">
+                    <h3><i class="fas fa-graduation-cap"></i> Cara Kerja Sistem</h3>
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>Kumpulkan Kado</h4>
+                                <p>Setiap peserta memberikan kado mereka ke admin. Admin memberi nomor unik pada setiap kado.</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">2</div>
-                        <div class="step-content">
-                            <h4>Acak Distribusi</h4>
-                            <p>Sistem mengacak penerima kado, memastikan tidak ada yang dapat kado sendiri.</p>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>Input Data</h4>
+                                <p>Admin memasukkan nama peserta dan nomor kado yang mereka berikan ke sistem.</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">3</div>
-                        <div class="step-content">
-                            <h4>Hasil Final</h4>
-                            <p>Setiap peserta melihat nomor kado yang akan mereka terima.</p>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Acak Penerima</h4>
+                                <p>Sistem mengacak penerima kado. Tidak ada yang akan menerima kado mereka sendiri.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h4>Tampilkan Hasil</h4>
+                                <p>Hasil hanya menunjukkan nama peserta dan nomor kado yang mereka terima (tanpa informasi pemberi).</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="stats-card">
-                <h3><i class="fas fa-chart-bar"></i> Statistik</h3>
-                <div class="stats">
-                    <div class="stat">
-                        <div class="stat-value" id="total-participants">0</div>
-                        <div class="stat-label">Total Peserta</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value" id="total-gifts">0</div>
-                        <div class="stat-label">Total Kado</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value" id="last-update">-</div>
-                        <div class="stat-label">Terakhir Diupdate</div>
-                    </div>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="results.html" id="resultsLink" style="display: none;">
+                        <i class="fas fa-external-link-alt"></i> Lihat Halaman Hasil
+                    </a>
+                    <button id="exportData" class="btn-secondary btn-small">
+                        <i class="fas fa-download"></i> Backup Data
+                    </button>
                 </div>
+                <p class="copyright">Sistem Tukar Kado &copy; 2023 | Data hanya tersimpan di browser Anda</p>
             </div>
-        </div>
+        </footer>
     </div>
 
     <!-- Modal Konfirmasi -->
@@ -177,15 +135,6 @@
         </div>
     </div>
 
-    <footer>
-        <p>Sistem Tukar Kado via Admin &copy; 2023 | Semua data disimpan di browser Anda</p>
-        <p class="github-link">
-            <a href="https://github.com/" target="_blank">
-                <i class="fab fa-github"></i> Lihat di GitHub
-            </a>
-        </p>
-    </footer>
-
-    <script src="script.js"></script>
+    <script src="admin.js"></script>
 </body>
 </html>
