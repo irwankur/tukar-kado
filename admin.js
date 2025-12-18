@@ -1,7 +1,6 @@
 // Data Aplikasi untuk Admin
 const AppState = {
-    participants: [], // Array of {name, giftNumber, id}
-    results: [] // Array of {receiver, giftNumber}
+    participants: [] // Array of {name, giftNumber, id}
 };
 
 // DOM Elements
@@ -10,13 +9,10 @@ const DOM = {
     giftNumber: () => document.getElementById('giftNumber'),
     addParticipantBtn: () => document.getElementById('addParticipant'),
     clearAllBtn: () => document.getElementById('clearAll'),
-    generateResultsBtn: () => document.getElementById('generateResults'),
-    viewResultsLink: () => document.getElementById('viewResults'),
-    resultsLink: () => document.getElementById('resultsLink'),
+    goToResultsLink: () => document.getElementById('goToResults'),
     participantCount: () => document.getElementById('participantCount'),
     participantsList: () => document.getElementById('participantsList'),
     alert: () => document.getElementById('alert'),
-    exportDataBtn: () => document.getElementById('exportData'),
     modal: () => document.getElementById('confirmModal'),
     modalTitle: () => document.getElementById('modalTitle'),
     modalMessage: () => document.getElementById('modalMessage'),
@@ -93,15 +89,9 @@ const Utils = {
     updateUIState() {
         const count = AppState.participants.length;
         DOM.participantCount().textContent = count;
-        DOM.generateResultsBtn().disabled = count < 2;
         
-        if (AppState.results.length > 0) {
-            DOM.viewResultsLink().style.display = 'flex';
-            DOM.resultsLink().style.display = 'inline-flex';
-        } else {
-            DOM.viewResultsLink().style.display = 'none';
-            DOM.resultsLink().style.display = 'none';
-        }
+        // Simpan ke localStorage
+        Storage.save();
     }
 };
 
@@ -110,55 +100,38 @@ const Storage = {
     save() {
         const data = {
             participants: AppState.participants,
-            results: AppState.results,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            version: '1.0'
         };
-        localStorage.setItem('giftExchangeData', JSON.stringify(data));
-        Utils.updateUIState();
+        localStorage.setItem('giftExchangeParticipants', JSON.stringify(data));
     },
     
     load() {
-        const saved = localStorage.getItem('giftExchangeData');
+        const saved = localStorage.getItem('giftExchangeParticipants');
         if (saved) {
             try {
                 const data = JSON.parse(saved);
                 AppState.participants = data.participants || [];
-                AppState.results = data.results || [];
                 Utils.updateUIState();
             } catch (e) {
                 console.error('Error loading data:', e);
-                localStorage.removeItem('giftExchangeData');
+                localStorage.removeItem('giftExchangeParticipants');
             }
         }
     },
     
     clear() {
-        localStorage.removeItem('giftExchangeData');
+        localStorage.removeItem('giftExchangeParticipants');
+        localStorage.removeItem('giftExchangeResults'); // Hapus juga hasil jika ada
         AppState.participants = [];
-        AppState.results = [];
         Utils.updateUIState();
     },
     
-    exportData() {
-        const data = {
-            participants: AppState.participants,
-            results: AppState.results,
-            timestamp: new Date().toISOString(),
-            totalParticipants: AppState.participants.length
-        };
-        
-        const content = JSON.stringify(data, null, 2);
-        const blob = new Blob([content], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `backup-tukar-kado-${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        Utils.showAlert('Data berhasil diexport!', 'success');
+    // Hanya untuk admin, hapus data peserta dari localStorage setelah diacak
+    clearParticipants() {
+        localStorage.removeItem('giftExchangeParticipants');
+        AppState.participants = [];
+        Utils.updateUIState();
     }
 };
 
@@ -170,8 +143,8 @@ function renderParticipantsList() {
         list.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-users-slash"></i>
-                <h3>Belum ada peserta</h3>
-                <p>Tambahkan peserta menggunakan form di atas</p>
+                <h3>Belum ada data</h3>
+                <p>Tambahkan peserta menggunakan form di samping</p>
             </div>
         `;
         return;
@@ -244,12 +217,6 @@ function removeParticipant(index) {
         `Hapus peserta "${participant.name}" dengan kado #${participant.giftNumber}?`,
         () => {
             AppState.participants.splice(index, 1);
-            // Jika peserta dihapus setelah hasil diacak, reset hasil
-            if (AppState.results.length > 0) {
-                AppState.results = [];
-                Utils.showAlert('Hasil direset karena peserta dihapus', 'warning');
-            }
-            
             Storage.save();
             renderParticipantsList();
             Utils.hideModal();
@@ -259,94 +226,39 @@ function removeParticipant(index) {
 
 function clearAllParticipants() {
     if (AppState.participants.length === 0) {
-        Utils.showAlert('Tidak ada peserta untuk dihapus', 'error');
+        Utils.showAlert('Tidak ada data untuk dihapus', 'error');
         return;
     }
     
     Utils.showModal(
-        'Hapus Semua Peserta',
-        `Apakah Anda yakin ingin menghapus semua ${AppState.participants.length} peserta?`,
+        'Hapus Semua Data',
+        `Apakah Anda yakin ingin menghapus semua ${AppState.participants.length} data peserta?`,
         () => {
-            AppState.participants = [];
-            AppState.results = [];
             Storage.clear();
             renderParticipantsList();
-            Utils.showAlert('Semua peserta telah dihapus', 'success');
+            Utils.showAlert('Semua data telah dihapus', 'success');
             Utils.hideModal();
         }
     );
 }
 
-// Fungsi Pengacakan
-function generateResults() {
+// Konfirmasi sebelum pindah ke halaman acak
+function confirmBeforeLeaving() {
     if (AppState.participants.length < 2) {
-        Utils.showAlert('Minimal diperlukan 2 peserta!', 'error');
+        Utils.showAlert('Minimal diperlukan 2 peserta untuk tukar kado!', 'error');
         return;
     }
     
-    // Reset hasil sebelumnya
-    AppState.results = [];
-    
-    // Buat array penerima (nama peserta)
-    let receivers = AppState.participants.map(p => p.name);
-    
-    // Acak penerima menggunakan Fisher-Yates
-    for (let i = receivers.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [receivers[i], receivers[j]] = [receivers[j], receivers[i]];
-    }
-    
-    // Mapping pemberi -> penerima
-    const assignments = [];
-    for (let i = 0; i < AppState.participants.length; i++) {
-        const giver = AppState.participants[i].name;
-        let receiver = receivers[i];
-        const giftNumber = AppState.participants[i].giftNumber;
-        
-        // Jika pemberi sama dengan penerima, cari tukar dengan orang lain
-        if (giver === receiver) {
-            for (let j = 0; j < receivers.length; j++) {
-                if (j !== i && receivers[j] !== AppState.participants[j].name) {
-                    [receivers[i], receivers[j]] = [receivers[j], receivers[i]];
-                    receiver = receivers[i];
-                    break;
-                }
-            }
+    Utils.showModal(
+        'Konfirmasi Menutup Halaman Admin',
+        `Data ${AppState.participants.length} peserta sudah tersimpan. Tutup halaman ini dan buka halaman acak di browser/komputer lain.`,
+        () => {
+            // Simpan data dan redirect
+            Storage.save();
+            window.location.href = 'acak.html';
+            Utils.hideModal();
         }
-        
-        assignments.push({
-            giver: giver,
-            giftNumber: giftNumber,
-            receiver: receiver
-        });
-    }
-    
-    // Verifikasi akhir
-    const selfGift = assignments.find(item => item.giver === item.receiver);
-    if (selfGift) {
-        Utils.showAlert('Terjadi kesalahan dalam pengacakan. Coba lagi.', 'error');
-        return;
-    }
-    
-    // Buat hasil final (hanya untuk penerima)
-    AppState.results = assignments.map(item => ({
-        receiver: item.receiver,
-        giftNumber: item.giftNumber
-    }));
-    
-    // Acak urutan hasil
-    for (let i = AppState.results.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [AppState.results[i], AppState.results[j]] = [AppState.results[j], AppState.results[i]];
-    }
-    
-    Storage.save();
-    Utils.showAlert('Pengacakan berhasil! Hasil siap dilihat.', 'success');
-    
-    // Scroll ke tombol lihat hasil
-    setTimeout(() => {
-        DOM.viewResultsLink().scrollIntoView({ behavior: 'smooth' });
-    }, 500);
+    );
 }
 
 // Inisialisasi
@@ -370,10 +282,9 @@ function init() {
     
     DOM.clearAllBtn().addEventListener('click', clearAllParticipants);
     
-    DOM.generateResultsBtn().addEventListener('click', generateResults);
-    
-    DOM.exportDataBtn().addEventListener('click', () => {
-        Storage.exportData();
+    DOM.goToResultsLink().addEventListener('click', (e) => {
+        e.preventDefault();
+        confirmBeforeLeaving();
     });
     
     // Modal events
@@ -394,6 +305,10 @@ function init() {
     
     // Set focus ke input nama
     DOM.participantName().focus();
+    
+    // Peringatan saat halaman admin dibuka
+    console.log('⚠️ Halaman Admin - Jangan biarkan peserta melihat halaman ini!');
+    console.log('📋 Data peserta tersimpan di localStorage browser ini.');
 }
 
 // Jalankan saat DOM siap
