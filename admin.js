@@ -263,4 +263,138 @@ function clearAllParticipants() {
         return;
     }
     
-    Ut
+    Utils.showModal(
+        'Hapus Semua Peserta',
+        `Apakah Anda yakin ingin menghapus semua ${AppState.participants.length} peserta?`,
+        () => {
+            AppState.participants = [];
+            AppState.results = [];
+            Storage.clear();
+            renderParticipantsList();
+            Utils.showAlert('Semua peserta telah dihapus', 'success');
+            Utils.hideModal();
+        }
+    );
+}
+
+// Fungsi Pengacakan
+function generateResults() {
+    if (AppState.participants.length < 2) {
+        Utils.showAlert('Minimal diperlukan 2 peserta!', 'error');
+        return;
+    }
+    
+    // Reset hasil sebelumnya
+    AppState.results = [];
+    
+    // Buat array penerima (nama peserta)
+    let receivers = AppState.participants.map(p => p.name);
+    
+    // Acak penerima menggunakan Fisher-Yates
+    for (let i = receivers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [receivers[i], receivers[j]] = [receivers[j], receivers[i]];
+    }
+    
+    // Mapping pemberi -> penerima
+    const assignments = [];
+    for (let i = 0; i < AppState.participants.length; i++) {
+        const giver = AppState.participants[i].name;
+        let receiver = receivers[i];
+        const giftNumber = AppState.participants[i].giftNumber;
+        
+        // Jika pemberi sama dengan penerima, cari tukar dengan orang lain
+        if (giver === receiver) {
+            for (let j = 0; j < receivers.length; j++) {
+                if (j !== i && receivers[j] !== AppState.participants[j].name) {
+                    [receivers[i], receivers[j]] = [receivers[j], receivers[i]];
+                    receiver = receivers[i];
+                    break;
+                }
+            }
+        }
+        
+        assignments.push({
+            giver: giver,
+            giftNumber: giftNumber,
+            receiver: receiver
+        });
+    }
+    
+    // Verifikasi akhir
+    const selfGift = assignments.find(item => item.giver === item.receiver);
+    if (selfGift) {
+        Utils.showAlert('Terjadi kesalahan dalam pengacakan. Coba lagi.', 'error');
+        return;
+    }
+    
+    // Buat hasil final (hanya untuk penerima)
+    AppState.results = assignments.map(item => ({
+        receiver: item.receiver,
+        giftNumber: item.giftNumber
+    }));
+    
+    // Acak urutan hasil
+    for (let i = AppState.results.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [AppState.results[i], AppState.results[j]] = [AppState.results[j], AppState.results[i]];
+    }
+    
+    Storage.save();
+    Utils.showAlert('Pengacakan berhasil! Hasil siap dilihat.', 'success');
+    
+    // Scroll ke tombol lihat hasil
+    setTimeout(() => {
+        DOM.viewResultsLink().scrollIntoView({ behavior: 'smooth' });
+    }, 500);
+}
+
+// Inisialisasi
+function init() {
+    // Load data dari localStorage
+    Storage.load();
+    
+    // Render daftar peserta
+    renderParticipantsList();
+    
+    // Setup event listeners
+    DOM.addParticipantBtn().addEventListener('click', addParticipant);
+    
+    DOM.participantName().addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') DOM.giftNumber().focus();
+    });
+    
+    DOM.giftNumber().addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addParticipant();
+    });
+    
+    DOM.clearAllBtn().addEventListener('click', clearAllParticipants);
+    
+    DOM.generateResultsBtn().addEventListener('click', generateResults);
+    
+    DOM.exportDataBtn().addEventListener('click', () => {
+        Storage.exportData();
+    });
+    
+    // Modal events
+    DOM.modalConfirm().addEventListener('click', () => {
+        if (modalCallback) modalCallback();
+    });
+    
+    DOM.modalCancel().addEventListener('click', () => {
+        Utils.hideModal();
+    });
+    
+    // Klik di luar modal untuk menutup
+    window.addEventListener('click', (e) => {
+        if (e.target === DOM.modal()) {
+            Utils.hideModal();
+        }
+    });
+    
+    // Set focus ke input nama
+    DOM.participantName().focus();
+}
+
+// Jalankan saat DOM siap
+document.addEventListener('DOMContentLoaded', init);
