@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acak Kado - Halaman Peserta</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+            color: white;
+            padding: 25px 0;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card h2 {
+            color: #ff7e5f;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .participants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .participant-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .participant-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            border-color: #ff7e5f;
+        }
+        
+        .participant-card.drawn {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-color: #4caf50;
+        }
+        
+        .participant-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .participant-wish {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 15px;
+            font-style: italic;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .drawn-number-info {
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #28a745;
+            font-size: 1.1rem;
+            text-align: center;
+            padding: 8px 12px;
+            background-color: rgba(40, 167, 69, 0.1);
+            border-radius: 6px;
+            border: 1px dashed #28a745;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: #ff7e5f;
+            color: white;
+            width: 100%;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background-color: #ff6b4a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(255, 126, 95, 0.2);
+        }
+        
+        .btn-primary:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border-left: 5px solid #17a2b8;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 5px solid #28a745;
+        }
+        
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border-left: 5px solid #ffc107;
+        }
+        
+        /* Modal untuk animasi jackpot */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #666;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .close-modal:hover {
+            background-color: #f0f0f0;
+        }
+        
+        /* Jackpot Animation Styles */
+        .jackpot-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+        }
+        
+        .participant-info {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            width: 100%;
+        }
+        
+        .jackpot-display {
+            width: 100%;
+            max-width: 600px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 15px;
+            padding: 40px 20px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .jackpot-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff7e5f, #ffd166, #06d6a0, #118ab2, #ef476f);
+            background-size: 200% 100%;
+            animation: rainbow 2s linear infinite;
+        }
+        
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        .jackpot-title {
+            text-align: center;
+            color: #ffd166;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+        
+        .number-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 40px;
+            height: 120px;
+        }
+        
+        .number-digit {
+            width: 80px;
+            height: 100px;
+            background: linear-gradient(145deg, #0f3460, #1a1a2e);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #ffd166;
+            box-shadow: 
+                inset 0 0 20px rgba(0, 0, 0, 0.5),
+                0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .number-digit.spinning {
+            animation: digitSpin 0.1s linear infinite;
+            background: linear-gradient(145deg, #ff7e5f, #ef476f);
+        }
+        
+        @keyframes digitSpin {
+            0% { transform: translateY(-100px); opacity: 0; }
+            10% { transform: translateY(-80px); opacity: 0.2; }
+            20% { transform: translateY(-60px); opacity: 0.4; }
+            30% { transform: translateY(-40px); opacity: 0.6; }
+            40% { transform: translateY(-20px); opacity: 0.8; }
+            50% { transform: translateY(0); opacity: 1; }
+            60% { transform: translateY(20px); opacity: 0.8; }
+            70% { transform: translateY(40px); opacity: 0.6; }
+            80% { transform: translateY(60px); opacity: 0.4; }
+            90% { transform: translateY(80px); opacity: 0.2; }
+            100% { transform: translateY(100px); opacity: 0; }
+        }
+        
+        .number-digit.final {
+            animation: pulse 1s infinite, bounceIn 0.5s ease-out;
+            background: linear-gradient(145deg, #06d6a0, #118ab2);
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1.1); }
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(6, 214, 160, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(6, 214, 160, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(6, 214, 160, 0); }
+        }
+        
+        .jackpot-btn {
+            padding: 20px 50px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff7e5f 0%, #ef476f 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 30px;
+            box-shadow: 0 10px 25px rgba(239, 71, 111, 0.4);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            align-self: center;
+        }
+        
+        .jackpot-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: 0.5s;
+        }
+        
+        .jackpot-btn:hover:not(:disabled) {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 30px rgba(239, 71, 111, 0.6);
+        }
+        
+        .jackpot-btn:hover:not(:disabled)::before {
+            left: 100%;
+        }
+        
+        .jackpot-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .jackpot-btn:disabled::before {
+            display: none;
+        }
+        
+        .result-display {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            border-radius: 20px;
+            margin-top: 30px;
+            border: 3px solid #06d6a0;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-number {
+            font-size: 6rem;
+            font-weight: 900;
+            color: #ef476f;
+            margin: 30px 0;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2);
+            animation: bounce 1s infinite alternate;
+        }
+        
+        @keyframes bounce {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+        
+        .result-message {
+            font-size: 1.5rem;
+            margin: 20px 0;
+            color: #333;
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 15px;
+            height: 15px;
+            background-color: #f00;
+            opacity: 0;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        
+        .drawn-results {
+            margin-top: 40px;
+        }
+        
+        .drawn-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .drawn-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .drawn-avatar {
+            width: 50px;
+            height: 50px;
+            background: #ff7e5f;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .drawn-info {
+            flex: 1;
+        }
+        
+        .drawn-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .drawn-kado {
+            color: #ff7e5f;
+            font-weight: 600;
+        }
+        
+        .nav-button {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            padding: 15px 25px;
+            background-color: #6a11cb;
+            color: white;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-button:hover {
+            background-color: #5a0db3;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        }
+        
+        .export-pdf-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            background-color: #dc3545;
+            color: white;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .export-pdf-btn:hover {
+            background-color: #c82333;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .participants-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+            
+            .number-digit {
+                width: 60px;
+                height: 80px;
+                font-size: 2.5rem;
+            }
+            
+            .result-number {
+                font-size: 4rem;
+            }
+            
+            .jackpot-btn {
+                padding: 15px 30px;
+                font-size: 1.2rem;
+            }
+            
+            .nav-button, .export-pdf-btn {
+                bottom: 20px;
+                padding: 12px 20px;
+                font-size: 0.9rem;
+            }
+            
+            .nav-button {
+                left: 20px;
+            }
+            
+            .export-pdf-btn {
+                right: 20px;
+            }
+            
+            .modal-content {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .participants-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .number-container {
+                gap: 10px;
+            }
+            
+            .number-digit {
+                width: 50px;
+                height: 70px;
+                font-size: 2rem;
+            }
+            
+            .jackpot-display {
+                padding: 20px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🎰 ACAK KADO JACKPOT 🎰</h1>
+            <p class="subtitle">Acak nomor kado dengan animasi jackpot yang seru!</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="alert alert-info">
+            <p><strong>📢 Instruksi:</strong> Klik pada nama peserta untuk memulai acak kado. Setiap peserta hanya bisa acak sekali dan tidak akan mendapatkan nomor kado miliknya sendiri. Acak tetap tersedia bahkan jika hanya tersisa 2 peserta.</p>
+        </div>
+        
+        <div class="card">
+            <h2>👥 Daftar Peserta</h2>
+            <p>Pilih peserta yang akan melakukan acak kado:</p>
+            
+            <div id="participants-grid" class="participants-grid">
+                <!-- Daftar peserta akan ditampilkan di sini -->
+            </div>
+            
+            <div id="no-participants" class="hidden" style="text-align: center; padding: 40px;">
+                <h3>Belum ada peserta terdaftar</h3>
+                <p>Silakan ke halaman admin untuk menambahkan peserta terlebih dahulu.</p>
+            </div>
+        </div>
+        
+        <div class="card drawn-results">
+            <h2>📊 Hasil Undian</h2>
+            <p>Berikut adalah peserta yang sudah melakukan acak kado:</p>
+            
+            <div id="drawn-list" class="drawn-list">
+                <!-- Hasil undian akan ditampilkan di sini -->
+            </div>
+            
+            <div id="no-drawn" style="text-align: center; padding: 20px; color: #888;">
+                <p>Belum ada peserta yang melakukan acak kado.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal untuk Animasi Jackpot -->
+    <div id="jackpotModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="close-modal" id="closeModal">&times;</button>
+            
+            <div class="jackpot-container">
+                <div class="participant-info">
+                    <h2 id="modal-title" style="color: #ff7e5f; margin-bottom: 10px;">Acak Kado untuk</h2>
+                    <h3 id="current-participant" style="color: #333; margin-bottom: 10px;"></h3>
+                    <p style="color: #666; font-style: italic;">"<span id="participant-wish"></span>"</p>
+                </div>
+                
+                <div class="jackpot-display">
+                    <div class="jackpot-title">🎰 NOMOR KADO 🎰</div>
+                    
+                    <div class="number-container">
+                        <div class="number-digit" id="digit1">?</div>
+                        <div class="number-digit" id="digit2">?</div>
+                        <div class="number-digit" id="digit3">?</div>
+                    </div>
+                    
+                    <button class="jackpot-btn" id="jackpotButton">ACAK SEKARANG!</button>
+                </div>
+                
+                <div id="jackpotResult" class="hidden">
+                    <div class="result-display">
+                        <h3 style="color: #ef476f; font-size: 2.5rem;">🎉 SELAMAT! 🎉</h3>
+                        <p class="result-message"><span id="result-participant"></span> mendapatkan</p>
+                        <div class="result-number" id="result-number">0</div>
+                        <p class="result-message">Nomor Kado!</p>
+                        
+                        <button class="btn btn-primary" id="closeResult" style="margin-top: 30px; padding: 15px 40px; font-size: 1.2rem;">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <a href="admin.html" class="nav-button">
+        ← Ke Halaman Admin
+    </a>
+    
+    <button class="export-pdf-btn" id="exportPdfBtn">
+        📄 Export Hasil ke PDF
+    </button>
+    
+    <footer>
+        <div class="container">
+            <p>Aplikasi Acak Kado &copy; 2023 - Halaman Acak Kado Jackpot</p>
+            <p>Selamat bermain dan semoga beruntung!</p>
+        </div>
+    </footer>
+
+    <!-- Library untuk export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        // Data dari localStorage
+        let participants = JSON.parse(localStorage.getItem('kadoParticipants')) || [];
+        let drawnResults = JSON.parse(localStorage.getItem('kadoDrawnResults')) || {};
+        
+        // Variabel untuk animasi jackpot
+        let currentParticipant = null;
+        let isAnimating = false;
+        let availableForCurrentParticipant = [];
+        let finalResult = 0;
+        let giverParticipant = null;
+        
+        // Fungsi untuk menampilkan daftar peserta
+        function displayParticipants() {
+            const participantsGrid = document.getElementById('participants-grid');
+            const noParticipants = document.getElementById('no-participants');
+            
+            if (participants.length === 0) {
+                participantsGrid.innerHTML = '';
+                noParticipants.classList.remove('hidden');
+                return;
+            }
+            
+            noParticipants.classList.add('hidden');
+            
+            // Urutkan peserta berdasarkan nama
+            const sortedParticipants = [...participants].sort((a, b) => a.name.localeCompare(b.name));
+            
+            let html = '';
+            
+            sortedParticipants.forEach(participant => {
+                const isDrawn = drawnResults[participant.id] !== undefined;
+                const cardClass = isDrawn ? 'participant-card drawn' : 'participant-card';
+                
+                // Dapatkan nomor kado yang didapat jika sudah diacak
+                let resultInfo = '';
+                if (isDrawn) {
+                    const result = drawnResults[participant.id];
+                    resultInfo = `<div class="drawn-number-info">Mendapatkan kado No. ${result.receivedKadoNumber}</div>`;
+                }
+                
+                // TIDAK menampilkan nomor kado peserta
+                html += `
+                    <div class="${cardClass}" data-id="${participant.id}">
+                        <div class="participant-name">${participant.name}</div>
+                        <div class="participant-wish">"${participant.wish}"</div>
+                        ${resultInfo}
+                        <button class="btn btn-primary spin-participant" data-id="${participant.id}" ${isDrawn ? 'disabled' : ''}>
+                            ${isDrawn ? '✅ Sudah Diacak' : '🎰 Acak Kado'}
+                        </button>
+                    </div>
+                `;
+            });
+            
+            participantsGrid.innerHTML = html;
+            
+            // Tambah event listener untuk tombol acak
+            document.querySelectorAll('.spin-participant').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = parseInt(this.getAttribute('data-id'));
+                    startJackpotForParticipant(id);
+                });
+            });
+        }
+        
+        // Fungsi untuk menampilkan hasil undian - TANPA menampilkan pemilik kado
+        function displayDrawnResults() {
+            const drawnList = document.getElementById('drawn-list');
+            const noDrawn = document.getElementById('no-drawn');
+            
+            const drawnIds = Object.keys(drawnResults);
+            
+            if (drawnIds.length === 0) {
+                drawnList.innerHTML = '';
+                noDrawn.style.display = 'block';
+                return;
+            }
+            
+            noDrawn.style.display = 'none';
+            
+            let html = '';
+            
+            drawnIds.forEach(id => {
+                const result = drawnResults[id];
+                const participant = participants.find(p => p.id === parseInt(id));
+                
+                if (participant) {
+                    const initial = participant.name.charAt(0).toUpperCase();
+                    
+                    // TIDAK menampilkan informasi pemilik kado
+                    html += `
+                        <div class="drawn-item">
+                            <div class="drawn-avatar">${initial}</div>
+                            <div class="drawn-info">
+                                <div class="drawn-name">${participant.name}</div>
+                                <div>Mendapatkan kado No. <span class="drawn-kado">${result.receivedKadoNumber}</span></div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            drawnList.innerHTML = html;
+        }
+        
+        // Fungsi untuk mendapatkan nomor yang tersedia untuk peserta tertentu
+        function getAvailableNumbersForParticipant(participantId) {
+            const participant = participants.find(p => p.id === participantId);
+            if (!participant) return [];
+            
+            // Dapatkan semua nomor kado peserta
+            const allNumbers = participants.map(p => p.kadoNumber);
+            
+            // Dapatkan nomor yang sudah diundi
+            const drawnNumbers = Object.values(drawnResults).map(result => result.receivedKadoNumber);
+            
+            // Filter nomor yang tersedia (tidak termasuk nomor peserta sendiri DAN tidak termasuk yang sudah diundi)
+            const available = allNumbers.filter(num => 
+                !drawnNumbers.includes(num) && num !== participant.kadoNumber
+            );
+            
+            return available;
+        }
+        
+        // Fungsi untuk memulai animasi jackpot untuk peserta tertentu
+        function startJackpotForParticipant(participantId) {
+            const participant = participants.find(p => p.id === participantId);
+            
+            if (!participant) {
+                alert('Peserta tidak ditemukan!');
+                return;
+            }
+            
+            // Cek apakah peserta sudah acak
+            if (drawnResults[participant.id]) {
+                alert(`${participant.name} sudah melakukan acak kado!`);
+                return;
+            }
+            
+            // Dapatkan nomor yang tersedia untuk peserta ini (tidak termasuk nomor sendiri)
+            availableForCurrentParticipant = getAvailableNumbersForParticipant(participantId);
+            
+            // Acak tetap tersedia meski hanya ada 1 nomor tersisa
+            if (availableForCurrentParticipant.length === 0) {
+                // Jika tidak ada nomor tersedia sama sekali
+                alert(`Tidak ada nomor kado yang tersedia untuk ${participant.name}!`);
+                return;
+            }
+            
+            currentParticipant = participant;
+            
+            // Reset tampilan digit
+            resetDigits();
+            
+            // Tampilkan modal
+            document.getElementById('current-participant').textContent = participant.name;
+            document.getElementById('participant-wish').textContent = participant.wish;
+            document.getElementById('jackpotModal').classList.remove('hidden');
+            document.getElementById('jackpotResult').classList.add('hidden');
+            document.getElementById('jackpotButton').disabled = false;
+            document.getElementById('jackpotButton').textContent = 'ACAK SEKARANG!';
+            
+            // Reset state animasi
+            isAnimating = false;
+            finalResult = 0;
+            giverParticipant = null;
+        }
+        
+        // Fungsi untuk mereset digit jackpot
+        function resetDigits() {
+            const digits = ['digit1', 'digit2', 'digit3'];
+            digits.forEach(digitId => {
+                const digit = document.getElementById(digitId);
+                digit.textContent = '?';
+                digit.classList.remove('spinning');
+                digit.classList.remove('final');
+            });
+        }
+        
+        // Fungsi untuk memulai animasi jackpot
+        function startJackpotAnimation() {
+            if (isAnimating || !currentParticipant) return;
+            
+            isAnimating = true;
+            document.getElementById('jackpotButton').disabled = true;
+            document.getElementById('jackpotButton').textContent = 'MENGACAK...';
+            
+            // Pilih nomor secara acak dari yang tersedia untuk peserta ini
+            const randomIndex = Math.floor(Math.random() * availableForCurrentParticipant.length);
+            finalResult = availableForCurrentParticipant[randomIndex];
+            
+            // Cari peserta yang memiliki nomor kado ini (pemberi kado)
+            giverParticipant = participants.find(p => p.kadoNumber === finalResult);
+            
+            // Format nomor menjadi 3 digit (001, 002, dst)
+            const formattedResult = finalResult.toString().padStart(3, '0');
+            
+            // Mulai animasi digit dengan efek bergerak
+            const digits = ['digit1', 'digit2', 'digit3'];
+            let animationSteps = 0;
+            const maxAnimationSteps = 30; // Jumlah putaran sebelum berhenti
+            
+            const animateDigits = () => {
+                if (animationSteps >= maxAnimationSteps) {
+                    // Animasi selesai, tampilkan hasil akhir
+                    digits.forEach((digitId, index) => {
+                        const digit = document.getElementById(digitId);
+                        digit.classList.remove('spinning');
+                        digit.classList.add('final');
+                        digit.textContent = formattedResult[index];
+                    });
+                    
+                    // Setelah semua animasi selesai
+                    setTimeout(() => {
+                        finishJackpotAnimation();
+                    }, 1000);
+                    return;
+                }
+                
+                // Tampilkan angka acak selama animasi
+                digits.forEach((digitId, index) => {
+                    const digit = document.getElementById(digitId);
+                    
+                    if (animationSteps < maxAnimationSteps - (index * 10)) {
+                        // Masih animasi, tampilkan angka acak
+                        digit.textContent = Math.floor(Math.random() * 10);
+                        digit.classList.add('spinning');
+                    } else {
+                        // Sudah sampai tahap akhir, tampilkan angka sebenarnya
+                        digit.textContent = formattedResult[index];
+                        digit.classList.remove('spinning');
+                        digit.classList.add('final');
+                    }
+                });
+                
+                animationSteps++;
+                
+                // Percepat animasi di akhir
+                const speed = Math.max(50, 200 - (animationSteps * 6));
+                setTimeout(animateDigits, speed);
+            };
+            
+            // Mulai animasi
+            animateDigits();
+            
+            // Efek suara (simulasi)
+            startSoundEffect();
+        }
+        
+        // Fungsi untuk efek suara animasi
+        function startSoundEffect() {
+            // Ini adalah simulasi efek suara
+            let soundStep = 0;
+            const soundInterval = setInterval(() => {
+                if (soundStep >= 30) {
+                    clearInterval(soundInterval);
+                    playFinalSound();
+                    return;
+                }
+                
+                // Efek suara tick selama animasi
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = 400 + (soundStep * 20);
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.05);
+                } catch (e) {
+                    // Fallback jika AudioContext tidak tersedia
+                }
+                
+                soundStep++;
+            }, 100);
+        }
+        
+        // Fungsi untuk suara akhir
+        function playFinalSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Buat beberapa oscillator untuk suara yang lebih kaya
+                for (let i = 0; i < 3; i++) {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = 800 + (i * 200);
+                    oscillator.type = i === 0 ? 'sine' : 'triangle';
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                }
+            } catch (e) {
+                // Fallback jika AudioContext tidak tersedia
+            }
+        }
+        
+        // Fungsi untuk menyelesaikan animasi jackpot
+        function finishJackpotAnimation() {
+            // Efek konfeti
+            createConfetti();
+            
+            // Simpan hasil
+            saveDrawResult(currentParticipant.id, finalResult);
+            
+            // Tampilkan hasil dengan harapan dari peserta
+            setTimeout(() => {
+                showJackpotResult();
+            }, 500);
+        }
+        
+        // Fungsi untuk membuat efek konfeti
+        function createConfetti() {
+            const colors = ['#ff7e5f', '#ffd166', '#06d6a0', '#118ab2', '#ef476f'];
+            const confettiCount = 150;
+            
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = Math.random() * 10 + 5 + 'px';
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                confetti.style.opacity = '1';
+                
+                document.body.appendChild(confetti);
+                
+                // Animasi konfeti
+                const animation = confetti.animate([
+                    { 
+                        opacity: 1,
+                        transform: 'translateY(-100px) rotate(0deg) scale(1)' 
+                    },
+                    { 
+                        opacity: 1,
+                        transform: `translateY(${window.innerHeight}px) rotate(${Math.random() * 720}deg) scale(0)` 
+                    }
+                ], {
+                    duration: Math.random() * 2000 + 1000,
+                    easing: 'cubic-bezier(0.215, 0.61, 0.355, 1)'
+                });
+                
+                // Hapus konfeti setelah animasi selesai
+                animation.onfinish = () => {
+                    confetti.remove();
+                };
+            }
+        }
+        
+        // Fungsi untuk menyimpan hasil undian
+        function saveDrawResult(participantId, receivedNumber) {
+            // Simpan hasil
+            drawnResults[participantId] = {
+                receivedKadoNumber: receivedNumber,
+                drawnAt: new Date().toISOString(),
+                giverId: giverParticipant ? giverParticipant.id : null
+            };
+            
+            // Simpan ke localStorage
+            localStorage.setItem('kadoDrawnResults', JSON.stringify(drawnResults));
+            
+            // Update tampilan
+            displayParticipants();
+            displayDrawnResults();
+        }
+        
+        // Fungsi untuk menampilkan hasil jackpot - TANPA harapan dari peserta pemberi kado
+        function showJackpotResult() {
+            document.getElementById('jackpotResult').classList.remove('hidden');
+            document.getElementById('result-participant').textContent = currentParticipant.name;
+            document.getElementById('result-number').textContent = finalResult;
+        }
+        
+        // Fungsi untuk export hasil ke PDF
+        function exportResultsToPDF() {
+            if (Object.keys(drawnResults).length === 0) {
+                alert('Belum ada hasil acakan yang bisa diexport!');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Judul
+            doc.setFontSize(22);
+            doc.setTextColor(255, 126, 95);
+            doc.text('HASIL ACAK KADO', 105, 25, { align: 'center' });
+            
+            // Subjudul
+            doc.setFontSize(14);
+            doc.setTextColor(100);
+            doc.text('Pertukaran Kado Tahun Ini', 105, 35, { align: 'center' });
+            
+            // Tanggal
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            doc.setFontSize(10);
+            doc.setTextColor(150);
+            doc.text(`Dibuat pada: ${dateStr}`, 105, 45, { align: 'center' });
+            
+            // Data hasil
+            const tableData = [];
+            Object.keys(drawnResults).forEach(id => {
+                const result = drawnResults[id];
+                const participant = participants.find(p => p.id === parseInt(id));
+                const giver = participants.find(p => p.kadoNumber === result.receivedKadoNumber);
+                
+                if (participant) {
+                    tableData.push([
+                        participant.name,
+                        result.receivedKadoNumber,
+                        giver ? giver.wish.substring(0, 50) + (giver.wish.length > 50 ? '...' : '') : '-'
+                    ]);
+                }
+            });
+            
+            // Urutkan berdasarkan nama
+            tableData.sort((a, b) => a[0].localeCompare(b[0]));
+            
+            // Tambah nomor urut
+            const finalTableData = tableData.map((row, index) => [index + 1, ...row]);
+            
+            // Buat tabel hasil
+            let startY = 60;
+            doc.autoTable({
+                head: [['No', 'Nama Peserta', 'Nomor Kado Didapat', 'Harapan dari Pemberi']],
+                body: finalTableData,
+                startY: startY,
+                theme: 'striped',
+                headStyles: { 
+                    fillColor: [255, 126, 95],
+                    textColor: [255, 255, 255],
+                    fontSize: 11,
+                    fontStyle: 'bold'
+                },
+                bodyStyles: { fontSize: 9 },
+                alternateRowStyles: { fillColor: [248, 249, 250] },
+                columnStyles: {
+                    0: { cellWidth: 15, halign: 'center' },
+                    1: { cellWidth: 50 },
+                    2: { cellWidth: 30, halign: 'center' },
+                    3: { cellWidth: 95 }
+                },
+                margin: { top: 10 },
+                styles: { cellPadding: 4 }
+            });
+            
+            // Footer dengan pesan
+            const finalY = doc.lastAutoTable.finalY + 20;
+            
+            doc.setFontSize(11);
+            doc.setTextColor(40);
+            doc.text('Catatan:', 20, finalY);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(80);
+            const message = [
+                '1. Setiap peserta tidak mendapatkan nomor kado miliknya sendiri',
+                '2. Acakan dilakukan secara random dan adil',
+                '3. Semoga pertukaran kado ini membawa kebahagiaan untuk semua',
+                '4. Harapan terbaik untuk tahun depan! 🎉'
+            ];
+            
+            message.forEach((line, index) => {
+                doc.text(line, 25, finalY + 10 + (index * 6));
+            });
+            
+            // Info jumlah peserta
+            const totalParticipants = participants.length;
+            const drawnCount = Object.keys(drawnResults).length;
+            const remaining = totalParticipants - drawnCount;
+            
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Total Peserta: ${totalParticipants} | Sudah Diacak: ${drawnCount} | Belum: ${remaining}`, 
+                    105, doc.internal.pageSize.height - 20, { align: 'center' });
+            
+            // Footer halaman
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(150);
+                doc.text(
+                    `Halaman ${i} dari ${pageCount}`,
+                    doc.internal.pageSize.width / 2,
+                    doc.internal.pageSize.height - 10,
+                    { align: 'center' }
+                );
+            }
+            
+            // Simpan PDF
+            const fileName = `hasil_acak_kado_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}.pdf`;
+            doc.save(fileName);
+            
+            // Tampilkan alert
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success';
+            alertDiv.innerHTML = `<p>✅ Hasil acakan berhasil diexport ke PDF!</p>`;
+            alertDiv.style.position = 'fixed';
+            alertDiv.style.top = '20px';
+            alertDiv.style.right = '20px';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.style.maxWidth = '300px';
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+        
+        // Event Listeners
+        document.getElementById('jackpotButton').addEventListener('click', startJackpotAnimation);
+        document.getElementById('exportPdfBtn').addEventListener('click', exportResultsToPDF);
+        
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('jackpotModal').classList.add('hidden');
+        });
+        
+        document.getElementById('closeResult').addEventListener('click', () => {
+            document.getElementById('jackpotModal').classList.add('hidden');
+        });
+        
+        // Tutup modal saat klik di luar konten
+        document.getElementById('jackpotModal').addEventListener('click', (e) => {
+            if (e.target.id === 'jackpotModal') {
+                document.getElementById('jackpotModal').classList.add('hidden');
+            }
+        });
+        
+        // Inisialisasi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            displayParticipants();
+            displayDrawnResults();
+            
+            // Cek apakah ada data peserta
+            if (participants.length === 0) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-warning';
+                alertDiv.innerHTML = '<p><strong>⚠️ Perhatian:</strong> Belum ada peserta terdaftar. Silakan ke halaman admin untuk menambahkan peserta terlebih dahulu.</p>';
+                
+                document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.card'));
+            }
+        });
+    </script>
+</body>
+</html>

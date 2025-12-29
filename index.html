@@ -3,109 +3,724 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Input Data Tukar Kado</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Tambahkan ini di <head> -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
-    <script src="firebase.js"></script>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
+    <title>Admin - Aplikasi Acak Kado</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card h2 {
+            color: #6a11cb;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            border-color: #6a11cb;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.1);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: #6a11cb;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #5a0db3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(106, 17, 203, 0.2);
+        }
+        
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            border-radius: 5px;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .import-section {
+            border-top: 1px solid #eee;
+            padding-top: 25px;
+            margin-top: 25px;
+        }
+        
+        .file-input {
+            padding: 15px;
+            border: 2px dashed #6a11cb;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+            background-color: #f9f5ff;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 5px solid #28a745;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 5px solid #dc3545;
+        }
+        
+        .result-section {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            border: 2px dashed #6a11cb;
+            padding: 25px;
+            margin-top: 30px;
+            border-radius: 10px;
+        }
+        
+        .result-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .nav-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            background-color: #28a745;
+            color: white;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-button:hover {
+            background-color: #218838;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+                font-size: 0.9rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .nav-button {
+                bottom: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
 </head>
 <body>
+    <header>
+        <div class="container">
+            <h1>🎁 Admin Acak Kado</h1>
+            <p class="subtitle">Input data peserta dan siapkan untuk spin kado</p>
+        </div>
+    </header>
+    
     <div class="container">
-        <header class="admin-header">
-            <h1><i class="fas fa-user-shield"></i> Admin - Input Data</h1>
-            <p class="description">Hanya untuk admin! Input nama peserta dan nomor kado mereka. Peserta TIDAK akan melihat halaman ini.</p>
-        </header>
-
-        <main class="admin-main">
-            <div class="input-panel">
-                <h2><i class="fas fa-user-plus"></i> Tambah Peserta</h2>
-                
-                <div class="alert" id="alert"></div>
-                
-                <div class="input-form">
-                    <div class="form-group">
-                        <label for="participantName"><i class="fas fa-user"></i> Nama Peserta</label>
-                        <input type="text" id="participantName" placeholder="Contoh: Andi">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="giftNumber"><i class="fas fa-tag"></i> Nomor Kado</label>
-                        <input type="number" id="giftNumber" placeholder="1-999" min="1" max="999">
-                    </div>
-                    
-                    <button id="addParticipant" class="btn-primary">
-                        <i class="fas fa-plus-circle"></i> Tambah
-                    </button>
-                </div>
-                
-                <div class="info-note">
-                    <i class="fas fa-lock"></i>
-                    <div>
-                        <p><strong>Keamanan Sistem:</strong> Data di halaman ini HANYA untuk admin. Setelah data dimasukkan, berikan link halaman hasil kepada peserta.</p>
-                        <p>Peserta TIDAK BOLEH melihat halaman ini untuk menjaga kejutan.</p>
-                    </div>
-                </div>
+        <div class="card">
+            <h2>📝 Input Data Peserta</h2>
+            <p>Tambahkan data peserta secara manual atau import dari file Excel.</p>
+            
+            <div class="form-group">
+                <label for="participant-name">Nama Peserta:</label>
+                <input type="text" id="participant-name" placeholder="Masukkan nama peserta">
             </div>
-
-            <div class="data-panel">
-                <div class="panel-header">
-                    <h2><i class="fas fa-database"></i> Data yang Tersimpan</h2>
-                    <span class="badge" id="participantCount">0</span>
-                </div>
-                
-                <div class="participants-list" id="participantsList">
-                    <div class="empty-state">
-                        <i class="fas fa-users-slash"></i>
-                        <h3>Belum ada data</h3>
-                        <p>Tambahkan peserta menggunakan form di samping</p>
-                    </div>
-                </div>
-                
-                <div class="panel-actions">
-                    <button id="clearAll" class="btn-secondary">
-                        <i class="fas fa-trash-alt"></i> Hapus Semua
-                    </button>
-                    <a href="acak.html" id="goToResults" class="btn-success">
-                        <i class="fas fa-arrow-right"></i> Lanjut ke Halaman Acak
-                    </a>
-                </div>
-                
-                <div class="data-info">
-                    <h3><i class="fas fa-info-circle"></i> Instruksi Admin:</h3>
-                    <ol>
-                        <li>Input semua peserta dan nomor kado mereka</li>
-                        <li>Pastikan data sudah lengkap dan benar</li>
-                        <li>Tutup browser halaman ini setelah selesai</li>
-                        <li>Buka halaman hasil di browser baru/komputer lain</li>
-                        <li>JANGAN biarkan peserta melihat halaman ini</li>
-                    </ol>
-                </div>
+            
+            <div class="form-group">
+                <label for="kado-number">Nomor Kado Peserta:</label>
+                <input type="number" id="kado-number" placeholder="Masukkan nomor kado peserta" min="1">
             </div>
-        </main>
-
-        <footer class="admin-footer">
-            <div class="footer-content">
-                <p><i class="fas fa-shield-alt"></i> Halaman Admin - Akses Terbatas</p>
-                <p class="copyright">Sistem Tukar Kado &copy; 2023 | Data tersimpan di browser admin</p>
+            
+            <div class="form-group">
+                <label for="wish">Harapan untuk Tahun Depan:</label>
+                <textarea id="wish" placeholder="Masukkan harapan peserta untuk tahun depan"></textarea>
             </div>
-        </footer>
-    </div>
-
-    <!-- Modal Konfirmasi -->
-    <div id="confirmModal" class="modal">
-        <div class="modal-content">
-            <h3 id="modalTitle">Konfirmasi</h3>
-            <p id="modalMessage">Apakah Anda yakin?</p>
-            <div class="modal-actions">
-                <button id="modalCancel" class="btn-secondary">Batal</button>
-                <button id="modalConfirm" class="btn-primary">Ya, Lanjutkan</button>
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" id="add-participant">Tambah Peserta</button>
+                <button class="btn btn-secondary" id="clear-form">Bersihkan Form</button>
+            </div>
+            
+            <div class="import-section">
+                <h3>📁 Import Data dari Excel</h3>
+                <p>Anda juga dapat mengimport data peserta dari file Excel dengan format kolom: Nama, Nomor Kado, Harapan</p>
+                <div class="file-input">
+                    <p>Seret file Excel ke sini atau klik untuk memilih</p>
+                    <input type="file" id="excel-file" accept=".xlsx, .xls, .csv">
+                </div>
+                <button class="btn btn-success" id="import-data">Import Data</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📋 Daftar Peserta</h2>
+            <div id="participant-table-container">
+                <p id="no-participants-msg">Belum ada peserta yang ditambahkan.</p>
+                <table id="participant-table" class="hidden">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Nama Peserta</th>
+                            <th>Nomor Kado</th>
+                            <th>Harapan</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="participant-table-body">
+                        <!-- Data peserta akan ditampilkan di sini -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-danger" id="clear-all">Hapus Semua Peserta</button>
+                <button class="btn btn-success" id="reset-draw">Reset Hasil Undian</button>
+            </div>
+        </div>
+        
+        <div id="data-summary" class="card">
+            <h2>📊 Ringkasan Data</h2>
+            <div id="summary-content">
+                <p>Jumlah Peserta: <span id="total-participants">0</span> orang</p>
+                <p>Nomor Kado Tersedia: <span id="available-numbers">0</span> nomor</p>
+                <p>Status: <span id="draw-status">Belum ada undian dilakukan</span></p>
             </div>
         </div>
     </div>
+    
+    <a href="participant.html" class="nav-button" id="go-to-participant">
+        Ke Halaman Spin Kado ➔
+    </a>
+    
+    <footer>
+        <div class="container">
+            <p>Aplikasi Acak Kado &copy; 2023 - Halaman Admin</p>
+            <p>Setiap peserta akan memilih kado menggunakan spin wheel</p>
+        </div>
+    </footer>
 
-    <script src="admin.js"></script>
+    <script>
+        // Data aplikasi
+        let participants = JSON.parse(localStorage.getItem('kadoParticipants')) || [];
+        let drawnResults = JSON.parse(localStorage.getItem('kadoDrawnResults')) || {};
+        let availableNumbers = JSON.parse(localStorage.getItem('kadoAvailableNumbers')) || [];
+        
+        // Fungsi untuk menampilkan alert
+        function showAlert(message, type) {
+            // Hapus alert sebelumnya
+            const existingAlert = document.querySelector('.alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            // Buat alert baru
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `<p>${message}</p>`;
+            
+            // Sisipkan alert di container
+            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.card'));
+            
+            // Hapus alert setelah 5 detik
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        // Tambah peserta
+        document.getElementById('add-participant').addEventListener('click', () => {
+            const name = document.getElementById('participant-name').value.trim();
+            const kadoNumber = document.getElementById('kado-number').value.trim();
+            const wish = document.getElementById('wish').value.trim();
+            
+            if (!name || !kadoNumber) {
+                showAlert('Nama dan nomor kado harus diisi!', 'error');
+                return;
+            }
+            
+            const number = parseInt(kadoNumber);
+            
+            // Cek apakah nomor kado sudah digunakan
+            if (participants.some(p => p.kadoNumber === number)) {
+                showAlert(`Nomor kado ${kadoNumber} sudah digunakan oleh peserta lain!`, 'error');
+                return;
+            }
+            
+            // Cek apakah nama sudah digunakan
+            if (participants.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+                showAlert(`Peserta dengan nama ${name} sudah terdaftar!`, 'error');
+                return;
+            }
+            
+            // Tambah peserta
+            participants.push({
+                id: Date.now(),
+                name: name,
+                kadoNumber: number,
+                wish: wish || "Tidak ada harapan yang ditulis"
+            });
+            
+            // Update nomor yang tersedia
+            updateAvailableNumbers();
+            
+            // Simpan ke localStorage
+            saveAllData();
+            
+            // Update tampilan
+            updateParticipantTable();
+            updateSummary();
+            
+            // Reset form
+            document.getElementById('clear-form').click();
+            
+            showAlert(`Peserta ${name} berhasil ditambahkan!`, 'success');
+        });
+        
+        // Bersihkan form
+        document.getElementById('clear-form').addEventListener('click', () => {
+            document.getElementById('participant-name').value = '';
+            document.getElementById('kado-number').value = '';
+            document.getElementById('wish').value = '';
+        });
+        
+        // Update tabel peserta
+        function updateParticipantTable() {
+            const tableBody = document.getElementById('participant-table-body');
+            const noParticipantsMsg = document.getElementById('no-participants-msg');
+            const table = document.getElementById('participant-table');
+            
+            if (participants.length === 0) {
+                noParticipantsMsg.classList.remove('hidden');
+                table.classList.add('hidden');
+                return;
+            }
+            
+            noParticipantsMsg.classList.add('hidden');
+            table.classList.remove('hidden');
+            
+            // Kosongkan tabel
+            tableBody.innerHTML = '';
+            
+            // Isi dengan data peserta
+            participants.forEach((participant, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${participant.name}</td>
+                    <td>${participant.kadoNumber}</td>
+                    <td>${participant.wish}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary action-btn edit-btn" data-id="${participant.id}">Edit</button>
+                            <button class="btn btn-danger action-btn delete-btn" data-id="${participant.id}">Hapus</button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            // Tambah event listener untuk tombol edit dan hapus
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    editParticipant(id);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    deleteParticipant(id);
+                });
+            });
+        }
+        
+        // Edit peserta
+        function editParticipant(id) {
+            const participant = participants.find(p => p.id === id);
+            if (!participant) return;
+            
+            // Isi form dengan data peserta
+            document.getElementById('participant-name').value = participant.name;
+            document.getElementById('kado-number').value = participant.kadoNumber;
+            document.getElementById('wish').value = participant.wish;
+            
+            // Hapus peserta dari array
+            const index = participants.findIndex(p => p.id === id);
+            participants.splice(index, 1);
+            
+            // Update nomor yang tersedia
+            updateAvailableNumbers();
+            
+            // Simpan data
+            saveAllData();
+            
+            // Update tampilan
+            updateParticipantTable();
+            updateSummary();
+            
+            showAlert(`Siap mengedit peserta ${participant.name}`, 'success');
+        }
+        
+        // Hapus peserta
+        function deleteParticipant(id) {
+            const participant = participants.find(p => p.id === id);
+            if (!participant) return;
+            
+            if (confirm(`Apakah Anda yakin ingin menghapus peserta ${participant.name}?`)) {
+                const index = participants.findIndex(p => p.id === id);
+                participants.splice(index, 1);
+                
+                // Update nomor yang tersedia
+                updateAvailableNumbers();
+                
+                // Simpan data
+                saveAllData();
+                
+                // Update tampilan
+                updateParticipantTable();
+                updateSummary();
+                
+                showAlert(`Peserta ${participant.name} berhasil dihapus!`, 'success');
+            }
+        }
+        
+        // Update daftar nomor yang tersedia untuk diundi
+        function updateAvailableNumbers() {
+            // Dapatkan semua nomor kado peserta
+            const allNumbers = participants.map(p => p.kadoNumber);
+            
+            // Dapatkan nomor yang sudah diundi
+            const drawnNumbers = Object.values(drawnResults).map(result => result.receivedKadoNumber);
+            
+            // Filter nomor yang tersedia (nomor peserta yang belum menerima kado dari nomor itu)
+            availableNumbers = allNumbers.filter(num => !drawnNumbers.includes(num));
+            
+            // Simpan ke localStorage
+            localStorage.setItem('kadoAvailableNumbers', JSON.stringify(availableNumbers));
+        }
+        
+        // Simpan semua data
+        function saveAllData() {
+            localStorage.setItem('kadoParticipants', JSON.stringify(participants));
+            localStorage.setItem('kadoDrawnResults', JSON.stringify(drawnResults));
+            localStorage.setItem('kadoAvailableNumbers', JSON.stringify(availableNumbers));
+        }
+        
+        // Import data dari file Excel (simulasi)
+        document.getElementById('import-data').addEventListener('click', () => {
+            const fileInput = document.getElementById('excel-file');
+            
+            if (!fileInput.files.length) {
+                showAlert('Pilih file Excel terlebih dahulu!', 'error');
+                return;
+            }
+            
+            // Simulasi import data dari Excel
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                // Simulasi data dari Excel
+                const simulatedData = [
+                    {name: "Andi Wijaya", kadoNumber: 1, wish: "Semoga tahun depan lebih sukses dan sehat selalu"},
+                    {name: "Budi Santoso", kadoNumber: 2, wish: "Harapan tahun depan bisa jalan-jalan ke Bali"},
+                    {name: "Citra Dewi", kadoNumber: 3, wish: "Semoga bisa naik jabatan dan gaji bertambah"},
+                    {name: "Dewi Lestari", kadoNumber: 4, wish: "Ingin tahun depan bisa membeli rumah pertama"},
+                    {name: "Eko Prasetyo", kadoNumber: 5, wish: "Semoga bisnis semakin lancar dan berkembang"},
+                    {name: "Fajar Ramadan", kadoNumber: 6, wish: "Harapannya bisa menikah tahun depan"},
+                    {name: "Gita Ayu", kadoNumber: 7, wish: "Ingin melanjutkan studi S2 ke luar negeri"},
+                    {name: "Hadi Nugroho", kadoNumber: 8, wish: "Semoga keluarga selalu sehat dan bahagia"},
+                    {name: "Indah Permata", kadoNumber: 9, wish: "Semoga tahun depan bisa punya mobil baru"},
+                    {name: "Joko Susilo", kadoNumber: 10, wish: "Harapan bisa punya usaha sendiri yang sukses"}
+                ];
+                
+                // Tambah data simulasi
+                let importedCount = 0;
+                simulatedData.forEach(data => {
+                    // Cek apakah nomor kado sudah digunakan
+                    if (!participants.some(p => p.kadoNumber === data.kadoNumber)) {
+                        // Cek apakah nama sudah digunakan
+                        if (!participants.some(p => p.name.toLowerCase() === data.name.toLowerCase())) {
+                            participants.push({
+                                id: Date.now() + Math.random(),
+                                name: data.name,
+                                kadoNumber: data.kadoNumber,
+                                wish: data.wish
+                            });
+                            importedCount++;
+                        }
+                    }
+                });
+                
+                // Update nomor yang tersedia
+                updateAvailableNumbers();
+                
+                // Simpan data
+                saveAllData();
+                
+                // Update tampilan
+                updateParticipantTable();
+                updateSummary();
+                
+                showAlert(`Berhasil mengimport ${importedCount} peserta dari file Excel!`, 'success');
+                fileInput.value = '';
+            };
+            
+            // Untuk simulasi, langsung jalankan onload
+            reader.readAsText(file);
+            setTimeout(() => reader.onload({target: {result: "simulated"}}), 500);
+        });
+        
+        // Hapus semua peserta
+        document.getElementById('clear-all').addEventListener('click', () => {
+            if (participants.length === 0) {
+                showAlert('Tidak ada peserta untuk dihapus!', 'error');
+                return;
+            }
+            
+            if (confirm(`Apakah Anda yakin ingin menghapus semua ${participants.length} peserta?`)) {
+                participants.length = 0;
+                drawnResults = {};
+                availableNumbers = [];
+                
+                // Hapus semua data dari localStorage
+                saveAllData();
+                
+                // Update tampilan
+                updateParticipantTable();
+                updateSummary();
+                
+                showAlert('Semua peserta berhasil dihapus!', 'success');
+            }
+        });
+        
+        // Reset hasil undian
+        document.getElementById('reset-draw').addEventListener('click', () => {
+            if (Object.keys(drawnResults).length === 0) {
+                showAlert('Belum ada undian yang dilakukan!', 'error');
+                return;
+            }
+            
+            if (confirm('Apakah Anda yakin ingin mereset semua hasil undian? Semua peserta bisa mengundi ulang.')) {
+                drawnResults = {};
+                updateAvailableNumbers();
+                saveAllData();
+                updateSummary();
+                
+                showAlert('Hasil undian berhasil direset!', 'success');
+            }
+        });
+        
+        // Update ringkasan data
+        function updateSummary() {
+            document.getElementById('total-participants').textContent = participants.length;
+            document.getElementById('available-numbers').textContent = availableNumbers.length;
+            
+            const drawnCount = Object.keys(drawnResults).length;
+            if (drawnCount === 0) {
+                document.getElementById('draw-status').textContent = 'Belum ada undian dilakukan';
+            } else {
+                document.getElementById('draw-status').textContent = `${drawnCount} peserta sudah mengundi`;
+            }
+        }
+        
+        // Inisialisasi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            updateParticipantTable();
+            updateSummary();
+        });
+    </script>
 </body>
 </html>
