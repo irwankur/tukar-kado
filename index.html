@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Aplikasi Acak Kado</title>
+    <!-- Tambahkan library SheetJS untuk membaca Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -195,19 +197,47 @@
             margin-top: 25px;
         }
         
-        .file-input {
+        .file-input-wrapper {
             padding: 15px;
             border: 2px dashed #6a11cb;
             border-radius: 8px;
             text-align: center;
             margin-bottom: 15px;
             background-color: #f9f5ff;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: block;
+        }
+        
+        .file-input-wrapper:hover {
+            background-color: #f0ebff;
+            border-color: #5a0db3;
+        }
+        
+        .file-input-wrapper.dragover {
+            background-color: #e6e1ff;
+            border-color: #4a09a3;
+            transform: scale(1.02);
+        }
+        
+        .file-info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 6px;
+            border: 1px solid #ddd;
         }
         
         .alert {
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .alert-success {
@@ -220,6 +250,18 @@
             background-color: #f8d7da;
             color: #721c24;
             border-left: 5px solid #dc3545;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border-left: 5px solid #17a2b8;
+        }
+        
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border-left: 5px solid #ffc107;
         }
         
         .result-section {
@@ -332,12 +374,29 @@
             
             <div class="import-section">
                 <h3>📁 Import Data dari Excel</h3>
-                <p>Anda juga dapat mengimport data peserta dari file Excel dengan format kolom: Nama, Nomor Kado, Harapan</p>
-                <div class="file-input">
-                    <p>Seret file Excel ke sini atau klik untuk memilih</p>
-                    <input type="file" id="excel-file" accept=".xlsx, .xls, .csv">
+                <p><strong>Format file Excel yang didukung:</strong> .xlsx, .xls, .csv</p>
+                <p><strong>Format kolom wajib:</strong></p>
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li><strong>Kolom A:</strong> Nama Peserta (teks)</li>
+                    <li><strong>Kolom B:</strong> Nomor Kado (angka)</li>
+                    <li><strong>Kolom C:</strong> Harapan (teks, opsional)</li>
+                </ul>
+                <p><em>Baris pertama dianggap sebagai header dan akan dilewati.</em></p>
+                
+                <!-- Area untuk memilih file -->
+                <div class="file-input-wrapper" id="file-input-wrapper">
+                    <p style="font-size: 1.2rem; margin-bottom: 10px;">📂 Klik di sini untuk memilih file</p>
+                    <p style="font-size: 0.9rem; color: #666;">Format: .xlsx, .xls, .csv</p>
+                    <p style="margin-top: 15px; font-size: 0.9rem; color: #6a11cb;">
+                        Atau seret file ke area ini
+                    </p>
+                    <input type="file" id="excel-file" accept=".xlsx,.xls,.csv" style="display: none;">
                 </div>
-                <button class="btn btn-success" id="import-data">Import Data</button>
+                
+                <div class="btn-group" style="margin-top: 20px;">
+                    <button class="btn btn-success" id="import-data">📥 Import Data</button>
+                    <button class="btn btn-secondary" id="download-template">📋 Download Template</button>
+                </div>
             </div>
         </div>
         
@@ -394,32 +453,378 @@
         let drawnResults = JSON.parse(localStorage.getItem('kadoDrawnResults')) || {};
         let availableNumbers = JSON.parse(localStorage.getItem('kadoAvailableNumbers')) || [];
         
-        // Fungsi untuk menampilkan alert
-        function showAlert(message, type) {
-            // Hapus alert sebelumnya
-            const existingAlert = document.querySelector('.alert');
-            if (existingAlert) {
-                existingAlert.remove();
-            }
-            
-            // Buat alert baru
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type}`;
-            alertDiv.innerHTML = `<p>${message}</p>`;
-            
-            // Sisipkan alert di container
-            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.card'));
-            
-            // Hapus alert setelah 5 detik
-            setTimeout(() => {
-                if (alertDiv.parentNode) {
-                    alertDiv.remove();
-                }
-            }, 5000);
+        // Fungsi untuk menampilkan pesan sederhana
+        function showAlert(message, type = 'info') {
+            // Gunakan alert biasa untuk menghindari error DOM
+            alert(message);
         }
         
+        // Fungsi untuk membaca file Excel
+        function readExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const data = e.target.result;
+                        
+                        // Parse workbook
+                        const workbook = XLSX.read(data, { 
+                            type: 'binary'
+                        });
+                        
+                        // Ambil sheet pertama
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        
+                        // Konversi ke JSON
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                            header: 1
+                        });
+                        
+                        const result = [];
+                        
+                        // Proses data - dimulai dari baris 1 (skip header)
+                        for (let i = 1; i < jsonData.length; i++) {
+                            const row = jsonData[i];
+                            
+                            if (row && row.length >= 2) {
+                                const name = row[0] ? String(row[0]).trim() : '';
+                                const kadoNumber = row[1] ? parseInt(row[1]) : 0;
+                                const wish = row[2] ? String(row[2]).trim() : "Tidak ada harapan yang ditulis";
+                                
+                                if (name && !isNaN(kadoNumber) && kadoNumber > 0) {
+                                    result.push({
+                                        name: name,
+                                        kadoNumber: kadoNumber,
+                                        wish: wish
+                                    });
+                                }
+                            }
+                        }
+                        
+                        resolve(result);
+                        
+                    } catch (error) {
+                        console.error('Error parsing Excel:', error);
+                        reject(new Error('Format file Excel tidak valid.'));
+                    }
+                };
+                
+                reader.onerror = function() {
+                    reject(new Error('Gagal membaca file.'));
+                };
+                
+                reader.readAsBinaryString(file);
+            });
+        }
+        
+        // Fungsi untuk membaca file CSV
+        function readCSVFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const csvText = e.target.result;
+                        const lines = csvText.split('\n');
+                        const result = [];
+                        
+                        // Skip header (baris pertama)
+                        for (let i = 1; i < lines.length; i++) {
+                            const line = lines[i].trim();
+                            if (!line) continue;
+                            
+                            // Split by comma
+                            const parts = line.split(',');
+                            if (parts.length >= 2) {
+                                const name = parts[0].replace(/"/g, '').trim();
+                                const kadoNumber = parseInt(parts[1].replace(/"/g, '').trim()) || 0;
+                                const wish = parts[2] ? parts[2].replace(/"/g, '').trim() : "Tidak ada harapan yang ditulis";
+                                
+                                if (name && !isNaN(kadoNumber) && kadoNumber > 0) {
+                                    result.push({
+                                        name: name,
+                                        kadoNumber: kadoNumber,
+                                        wish: wish
+                                    });
+                                }
+                            }
+                        }
+                        
+                        resolve(result);
+                        
+                    } catch (error) {
+                        console.error('Error parsing CSV:', error);
+                        reject(new Error('Format file CSV tidak valid.'));
+                    }
+                };
+                
+                reader.onerror = function() {
+                    reject(new Error('Gagal membaca file.'));
+                };
+                
+                reader.readAsText(file);
+            });
+        }
+        
+        // Setup drag and drop untuk file input
+        function setupFileDragDrop() {
+            const fileInputWrapper = document.getElementById('file-input-wrapper');
+            const fileInput = document.getElementById('excel-file');
+            
+            // Klik pada wrapper untuk trigger file input
+            fileInputWrapper.addEventListener('click', function(e) {
+                // Jangan trigger jika yang diklik adalah input file
+                if (e.target !== fileInput) {
+                    fileInput.click();
+                }
+            });
+            
+            // Drag and drop
+            fileInputWrapper.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.classList.add('dragover');
+            });
+            
+            fileInputWrapper.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.classList.remove('dragover');
+            });
+            
+            fileInputWrapper.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.classList.remove('dragover');
+                
+                if (e.dataTransfer.files.length) {
+                    const file = e.dataTransfer.files[0];
+                    
+                    // Validasi file
+                    const isExcel = file.name.match(/\.(xlsx|xls)$/i);
+                    const isCSV = file.name.match(/\.csv$/i);
+                    
+                    if (!isExcel && !isCSV) {
+                        showAlert('File harus berformat Excel (.xlsx, .xls) atau CSV!', 'error');
+                        return;
+                    }
+                    
+                    // Set file ke input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    fileInput.files = dataTransfer.files;
+                    
+                    // Tampilkan info file
+                    displayFileInfo(file);
+                    
+                    showAlert('File siap diimport. Klik tombol "Import Data" untuk melanjutkan.');
+                }
+            });
+            
+            // Handle file selection
+            fileInput.addEventListener('change', function() {
+                if (this.files.length) {
+                    const file = this.files[0];
+                    displayFileInfo(file);
+                    showAlert('File siap diimport. Klik tombol "Import Data" untuk melanjutkan.');
+                }
+            });
+            
+            // Fungsi untuk menampilkan info file
+            function displayFileInfo(file) {
+                const fileSize = (file.size / 1024).toFixed(2);
+                const fileInfo = document.createElement('div');
+                fileInfo.className = 'file-info';
+                fileInfo.innerHTML = `
+                    <p style="color: #6a11cb; font-weight: 600;">
+                        📄 ${file.name} (${fileSize} KB)
+                    </p>
+                    <p style="font-size: 0.9rem; color: #666; margin-top: 5px;">
+                        Klik "Import Data" untuk memproses file
+                    </p>
+                `;
+                
+                // Hapus info sebelumnya
+                const existingInfo = fileInputWrapper.querySelector('.file-info');
+                if (existingInfo) {
+                    existingInfo.remove();
+                }
+                
+                fileInputWrapper.appendChild(fileInfo);
+            }
+        }
+        
+        // Import data dari file Excel
+        document.getElementById('import-data').addEventListener('click', async function() {
+            console.log('Import button clicked');
+            
+            const fileInput = document.getElementById('excel-file');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showAlert('Pilih file Excel/CSV terlebih dahulu!', 'error');
+                return;
+            }
+            
+            // Validasi tipe file
+            const isExcel = file.name.match(/\.(xlsx|xls)$/i);
+            const isCSV = file.name.match(/\.csv$/i);
+            
+            if (!isExcel && !isCSV) {
+                showAlert('File harus berformat Excel (.xlsx, .xls) atau CSV!', 'error');
+                return;
+            }
+            
+            // Tampilkan loading
+            const importBtn = this;
+            const originalText = importBtn.innerHTML;
+            importBtn.innerHTML = '⏳ Memproses...';
+            importBtn.disabled = true;
+            
+            try {
+                showAlert('Sedang membaca file...');
+                
+                let excelData;
+                
+                // Baca file sesuai tipe
+                if (isExcel) {
+                    excelData = await readExcelFile(file);
+                } else {
+                    excelData = await readCSVFile(file);
+                }
+                
+                if (!excelData || excelData.length === 0) {
+                    showAlert('Tidak ada data yang ditemukan dalam file!');
+                    importBtn.innerHTML = originalText;
+                    importBtn.disabled = false;
+                    return;
+                }
+                
+                console.log('Data dari file:', excelData);
+                
+                // Proses data
+                let importedCount = 0;
+                let duplicateCount = 0;
+                
+                for (let i = 0; i < excelData.length; i++) {
+                    const row = excelData[i];
+                    
+                    if (!row || !row.name || !row.kadoNumber) {
+                        continue;
+                    }
+                    
+                    const name = String(row.name).trim();
+                    const kadoNumber = parseInt(row.kadoNumber);
+                    const wish = row.wish ? String(row.wish).trim() : "Tidak ada harapan yang ditulis";
+                    
+                    // Validasi
+                    if (!name || isNaN(kadoNumber) || kadoNumber <= 0) {
+                        continue;
+                    }
+                    
+                    // Cek duplikat
+                    const isDuplicateNumber = participants.some(p => p.kadoNumber === kadoNumber);
+                    const isDuplicateName = participants.some(p => p.name.toLowerCase() === name.toLowerCase());
+                    
+                    if (isDuplicateNumber || isDuplicateName) {
+                        duplicateCount++;
+                        continue;
+                    }
+                    
+                    // Tambah peserta
+                    participants.push({
+                        id: Date.now() + i,
+                        name: name,
+                        kadoNumber: kadoNumber,
+                        wish: wish
+                    });
+                    
+                    importedCount++;
+                }
+                
+                // Update data jika ada yang diimport
+                if (importedCount > 0) {
+                    updateAvailableNumbers();
+                    saveAllData();
+                    updateParticipantTable();
+                    updateSummary();
+                }
+                
+                // Tampilkan hasil
+                let message = '';
+                if (importedCount > 0) {
+                    message = `✅ ${importedCount} data berhasil diimport`;
+                    if (duplicateCount > 0) {
+                        message += `, ${duplicateCount} data duplikat dilewati`;
+                    }
+                } else {
+                    if (duplicateCount > 0) {
+                        message = `⚠️ ${duplicateCount} data duplikat ditemukan, tidak ada data baru yang diimport`;
+                    } else {
+                        message = '❌ Tidak ada data yang valid untuk diimport';
+                    }
+                }
+                
+                showAlert(message);
+                
+                // Reset
+                fileInput.value = '';
+                const fileInfo = document.getElementById('file-input-wrapper').querySelector('.file-info');
+                if (fileInfo) {
+                    fileInfo.remove();
+                }
+                
+            } catch (error) {
+                console.error('Import error:', error);
+                showAlert(`Gagal mengimport file: ${error.message}`, 'error');
+            } finally {
+                importBtn.innerHTML = originalText;
+                importBtn.disabled = false;
+            }
+        });
+        
+        // Download template Excel
+        document.getElementById('download-template').addEventListener('click', function() {
+            try {
+                // Buat data template
+                const templateData = [
+                    ['Nama Peserta', 'Nomor Kado', 'Harapan'],
+                    ['Andi Wijaya', 1, 'Semoga tahun depan lebih sukses'],
+                    ['Budi Santoso', 2, 'Harapan bisa jalan-jalan ke Bali'],
+                    ['Citra Dewi', 3, 'Semoga bisa naik jabatan'],
+                    ['Dewi Lestari', 4, 'Ingin membeli rumah pertama'],
+                    ['Eko Prasetyo', 5, 'Bisnis semakin lancar']
+                ];
+                
+                // Buat workbook
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(templateData);
+                
+                // Atur lebar kolom
+                const colWidths = [
+                    { wch: 25 }, // Nama Peserta
+                    { wch: 15 }, // Nomor Kado
+                    { wch: 40 }  // Harapan
+                ];
+                ws['!cols'] = colWidths;
+                
+                XLSX.utils.book_append_sheet(wb, ws, "Template Peserta");
+                
+                // Download file
+                XLSX.writeFile(wb, "Template_Data_Peserta_Kado.xlsx");
+                
+                showAlert('Template berhasil didownload! Silakan isi dengan data peserta Anda.');
+                
+            } catch (error) {
+                console.error('Error membuat template:', error);
+                showAlert('Gagal membuat template.', 'error');
+            }
+        });
+        
         // Tambah peserta
-        document.getElementById('add-participant').addEventListener('click', () => {
+        document.getElementById('add-participant').addEventListener('click', function() {
             const name = document.getElementById('participant-name').value.trim();
             const kadoNumber = document.getElementById('kado-number').value.trim();
             const wish = document.getElementById('wish').value.trim();
@@ -430,6 +835,11 @@
             }
             
             const number = parseInt(kadoNumber);
+            
+            if (isNaN(number) || number <= 0) {
+                showAlert('Nomor kado harus angka positif!', 'error');
+                return;
+            }
             
             // Cek apakah nomor kado sudah digunakan
             if (participants.some(p => p.kadoNumber === number)) {
@@ -464,11 +874,11 @@
             // Reset form
             document.getElementById('clear-form').click();
             
-            showAlert(`Peserta ${name} berhasil ditambahkan!`, 'success');
+            showAlert(`Peserta ${name} berhasil ditambahkan!`);
         });
         
         // Bersihkan form
-        document.getElementById('clear-form').addEventListener('click', () => {
+        document.getElementById('clear-form').addEventListener('click', function() {
             document.getElementById('participant-name').value = '';
             document.getElementById('kado-number').value = '';
             document.getElementById('wish').value = '';
@@ -550,7 +960,7 @@
             updateParticipantTable();
             updateSummary();
             
-            showAlert(`Siap mengedit peserta ${participant.name}`, 'success');
+            showAlert(`Siap mengedit peserta ${participant.name}`);
         }
         
         // Hapus peserta
@@ -572,7 +982,7 @@
                 updateParticipantTable();
                 updateSummary();
                 
-                showAlert(`Peserta ${participant.name} berhasil dihapus!`, 'success');
+                showAlert(`Peserta ${participant.name} berhasil dihapus!`);
             }
         }
         
@@ -598,73 +1008,8 @@
             localStorage.setItem('kadoAvailableNumbers', JSON.stringify(availableNumbers));
         }
         
-        // Import data dari file Excel (simulasi)
-        document.getElementById('import-data').addEventListener('click', () => {
-            const fileInput = document.getElementById('excel-file');
-            
-            if (!fileInput.files.length) {
-                showAlert('Pilih file Excel terlebih dahulu!', 'error');
-                return;
-            }
-            
-            // Simulasi import data dari Excel
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                // Simulasi data dari Excel
-                const simulatedData = [
-                    {name: "Andi Wijaya", kadoNumber: 1, wish: "Semoga tahun depan lebih sukses dan sehat selalu"},
-                    {name: "Budi Santoso", kadoNumber: 2, wish: "Harapan tahun depan bisa jalan-jalan ke Bali"},
-                    {name: "Citra Dewi", kadoNumber: 3, wish: "Semoga bisa naik jabatan dan gaji bertambah"},
-                    {name: "Dewi Lestari", kadoNumber: 4, wish: "Ingin tahun depan bisa membeli rumah pertama"},
-                    {name: "Eko Prasetyo", kadoNumber: 5, wish: "Semoga bisnis semakin lancar dan berkembang"},
-                    {name: "Fajar Ramadan", kadoNumber: 6, wish: "Harapannya bisa menikah tahun depan"},
-                    {name: "Gita Ayu", kadoNumber: 7, wish: "Ingin melanjutkan studi S2 ke luar negeri"},
-                    {name: "Hadi Nugroho", kadoNumber: 8, wish: "Semoga keluarga selalu sehat dan bahagia"},
-                    {name: "Indah Permata", kadoNumber: 9, wish: "Semoga tahun depan bisa punya mobil baru"},
-                    {name: "Joko Susilo", kadoNumber: 10, wish: "Harapan bisa punya usaha sendiri yang sukses"}
-                ];
-                
-                // Tambah data simulasi
-                let importedCount = 0;
-                simulatedData.forEach(data => {
-                    // Cek apakah nomor kado sudah digunakan
-                    if (!participants.some(p => p.kadoNumber === data.kadoNumber)) {
-                        // Cek apakah nama sudah digunakan
-                        if (!participants.some(p => p.name.toLowerCase() === data.name.toLowerCase())) {
-                            participants.push({
-                                id: Date.now() + Math.random(),
-                                name: data.name,
-                                kadoNumber: data.kadoNumber,
-                                wish: data.wish
-                            });
-                            importedCount++;
-                        }
-                    }
-                });
-                
-                // Update nomor yang tersedia
-                updateAvailableNumbers();
-                
-                // Simpan data
-                saveAllData();
-                
-                // Update tampilan
-                updateParticipantTable();
-                updateSummary();
-                
-                showAlert(`Berhasil mengimport ${importedCount} peserta dari file Excel!`, 'success');
-                fileInput.value = '';
-            };
-            
-            // Untuk simulasi, langsung jalankan onload
-            reader.readAsText(file);
-            setTimeout(() => reader.onload({target: {result: "simulated"}}), 500);
-        });
-        
         // Hapus semua peserta
-        document.getElementById('clear-all').addEventListener('click', () => {
+        document.getElementById('clear-all').addEventListener('click', function() {
             if (participants.length === 0) {
                 showAlert('Tidak ada peserta untuk dihapus!', 'error');
                 return;
@@ -682,12 +1027,12 @@
                 updateParticipantTable();
                 updateSummary();
                 
-                showAlert('Semua peserta berhasil dihapus!', 'success');
+                showAlert('Semua peserta berhasil dihapus!');
             }
         });
         
         // Reset hasil undian
-        document.getElementById('reset-draw').addEventListener('click', () => {
+        document.getElementById('reset-draw').addEventListener('click', function() {
             if (Object.keys(drawnResults).length === 0) {
                 showAlert('Belum ada undian yang dilakukan!', 'error');
                 return;
@@ -699,7 +1044,7 @@
                 saveAllData();
                 updateSummary();
                 
-                showAlert('Hasil undian berhasil direset!', 'success');
+                showAlert('Hasil undian berhasil direset!');
             }
         });
         
@@ -717,9 +1062,16 @@
         }
         
         // Inisialisasi saat halaman dimuat
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded');
+            
             updateParticipantTable();
             updateSummary();
+            setupFileDragDrop();
+            
+            // Test localStorage
+            console.log('Participants in localStorage:', participants.length);
+            console.log('Drawn results:', Object.keys(drawnResults).length);
         });
     </script>
 </body>
