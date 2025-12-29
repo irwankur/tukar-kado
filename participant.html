@@ -170,6 +170,24 @@
             background-color: #218838;
         }
         
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
         .hidden {
             display: none !important;
         }
@@ -512,6 +530,44 @@
             font-weight: 600;
         }
         
+        /* Tombol Acak Semua */
+        .batch-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .batch-progress {
+            margin-top: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff7e5f, #ff9e7d);
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
         .nav-button {
             position: fixed;
             bottom: 30px;
@@ -613,6 +669,10 @@
             .modal-content {
                 padding: 20px;
             }
+            
+            .batch-controls {
+                flex-direction: column;
+            }
         }
         
         @media (max-width: 480px) {
@@ -646,12 +706,36 @@
     
     <div class="container">
         <div class="alert alert-info">
-            <p><strong>📢 Instruksi:</strong> Klik pada nama peserta untuk memulai acak kado. Setiap peserta hanya bisa acak sekali dan tidak akan mendapatkan nomor kado miliknya sendiri. Acak tetap tersedia bahkan jika hanya tersisa 2 peserta.</p>
+            <p><strong>📢 Instruksi:</strong> Klik pada nama peserta untuk memulai acak kado. Atau gunakan tombol "Acak Semua" untuk mengacak semua peserta sekaligus. Setiap peserta hanya bisa acak sekali dan tidak akan mendapatkan nomor kado miliknya sendiri.</p>
         </div>
         
         <div class="card">
             <h2>👥 Daftar Peserta</h2>
             <p>Pilih peserta yang akan melakukan acak kado:</p>
+            
+            <!-- Tombol Acak Semua -->
+            <div class="batch-controls">
+                <button class="btn btn-warning" id="randomize-all">
+                    🎲 Acak Semua Peserta
+                </button>
+                <button class="btn btn-secondary" id="stop-randomize" style="display: none;">
+                    ⏸️ Hentikan Acakan
+                </button>
+                <button class="btn btn-danger" id="reset-all">
+                    🔄 Reset Semua Hasil
+                </button>
+            </div>
+            
+            <!-- Progress Bar untuk Acak Semua -->
+            <div id="batch-progress" class="batch-progress hidden">
+                <div class="progress-text">
+                    <span id="progress-status">Memproses...</span>
+                    <span id="progress-count">0/0</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+            </div>
             
             <div id="participants-grid" class="participants-grid">
                 <!-- Daftar peserta akan ditampilkan di sini -->
@@ -715,7 +799,7 @@
         </div>
     </div>
     
-    <a href="admin.html" class="nav-button">
+    <a href="index.html" class="nav-button">
         ← Ke Halaman Admin
     </a>
     
@@ -745,6 +829,13 @@
         let availableForCurrentParticipant = [];
         let finalResult = 0;
         let giverParticipant = null;
+        
+        // Variabel untuk acak semua
+        let isBatchProcessing = false;
+        let stopBatchProcessing = false;
+        let batchQueue = [];
+        let currentBatchIndex = 0;
+        let totalBatchParticipants = 0;
         
         // Fungsi untuk menampilkan daftar peserta
         function displayParticipants() {
@@ -855,6 +946,20 @@
             const available = allNumbers.filter(num => 
                 !drawnNumbers.includes(num) && num !== participant.kadoNumber
             );
+            
+            return available;
+        }
+        
+        // Fungsi untuk mendapatkan semua nomor yang tersedia (untuk batch processing)
+        function getAllAvailableNumbers() {
+            // Dapatkan semua nomor kado peserta
+            const allNumbers = participants.map(p => p.kadoNumber);
+            
+            // Dapatkan nomor yang sudah diundi
+            const drawnNumbers = Object.values(drawnResults).map(result => result.receivedKadoNumber);
+            
+            // Filter nomor yang tersedia
+            const available = allNumbers.filter(num => !drawnNumbers.includes(num));
             
             return available;
         }
@@ -1124,6 +1229,176 @@
             document.getElementById('result-number').textContent = finalResult;
         }
         
+        // ============================================
+        // FUNGSI UNTUK ACAK SEMUA PESERTA SEKALIGUS
+        // ============================================
+        
+        // Fungsi untuk mengacak semua peserta secara otomatis
+        async function randomizeAllParticipants() {
+            if (isBatchProcessing) {
+                alert('Sedang memproses acakan...');
+                return;
+            }
+            
+            // Cek apakah ada peserta
+            if (participants.length === 0) {
+                alert('Belum ada peserta terdaftar!');
+                return;
+            }
+            
+            // Dapatkan peserta yang belum diacak
+            const undrawnParticipants = participants.filter(p => !drawnResults[p.id]);
+            
+            if (undrawnParticipants.length === 0) {
+                alert('Semua peserta sudah diacak!');
+                return;
+            }
+            
+            // Konfirmasi
+            if (!confirm(`Apakah Anda yakin ingin mengacak ${undrawnParticipants.length} peserta sekaligus?`)) {
+                return;
+            }
+            
+            // Setup batch processing
+            isBatchProcessing = true;
+            stopBatchProcessing = false;
+            batchQueue = [...undrawnParticipants];
+            currentBatchIndex = 0;
+            totalBatchParticipants = undrawnParticipants.length;
+            
+            // Tampilkan progress bar
+            document.getElementById('batch-progress').classList.remove('hidden');
+            document.getElementById('randomize-all').style.display = 'none';
+            document.getElementById('stop-randomize').style.display = 'inline-flex';
+            
+            // Mulai proses
+            await processBatchQueue();
+        }
+        
+        // Fungsi untuk memproses queue peserta
+        async function processBatchQueue() {
+            if (stopBatchProcessing || batchQueue.length === 0) {
+                finishBatchProcessing();
+                return;
+            }
+            
+            // Ambil peserta berikutnya
+            const participant = batchQueue.shift();
+            currentBatchIndex++;
+            
+            // Update progress
+            updateProgress(currentBatchIndex, totalBatchParticipants);
+            
+            try {
+                // Dapatkan nomor yang tersedia untuk peserta ini
+                const availableNumbers = getAvailableNumbersForParticipant(participant.id);
+                
+                if (availableNumbers.length === 0) {
+                    // Skip jika tidak ada nomor tersedia
+                    console.log(`Skip ${participant.name}: no available numbers`);
+                } else {
+                    // Acak nomor
+                    const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+                    const finalResult = availableNumbers[randomIndex];
+                    
+                    // Cari pemberi kado
+                    const giverParticipant = participants.find(p => p.kadoNumber === finalResult);
+                    
+                    // Simpan hasil
+                    drawnResults[participant.id] = {
+                        receivedKadoNumber: finalResult,
+                        drawnAt: new Date().toISOString(),
+                        giverId: giverParticipant ? giverParticipant.id : null
+                    };
+                    
+                    // Update localStorage
+                    localStorage.setItem('kadoDrawnResults', JSON.stringify(drawnResults));
+                    
+                    // Delay untuk efek visual
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                }
+                
+                // Update tampilan setiap 5 peserta untuk performa
+                if (currentBatchIndex % 5 === 0 || batchQueue.length === 0) {
+                    displayParticipants();
+                    displayDrawnResults();
+                }
+                
+                // Lanjut ke peserta berikutnya
+                if (batchQueue.length > 0) {
+                    setTimeout(processBatchQueue, 100);
+                } else {
+                    finishBatchProcessing();
+                }
+                
+            } catch (error) {
+                console.error('Error processing participant:', participant.name, error);
+                // Lanjut ke peserta berikutnya meski error
+                if (batchQueue.length > 0) {
+                    setTimeout(processBatchQueue, 100);
+                } else {
+                    finishBatchProcessing();
+                }
+            }
+        }
+        
+        // Fungsi untuk update progress bar
+        function updateProgress(current, total) {
+            const percentage = Math.round((current / total) * 100);
+            
+            document.getElementById('progress-fill').style.width = `${percentage}%`;
+            document.getElementById('progress-count').textContent = `${current}/${total}`;
+            document.getElementById('progress-status').textContent = `Mengacak... ${percentage}%`;
+        }
+        
+        // Fungsi untuk menyelesaikan batch processing
+        function finishBatchProcessing() {
+            isBatchProcessing = false;
+            stopBatchProcessing = false;
+            
+            // Update tampilan final
+            displayParticipants();
+            displayDrawnResults();
+            
+            // Sembunyikan progress bar
+            document.getElementById('batch-progress').classList.add('hidden');
+            document.getElementById('randomize-all').style.display = 'inline-flex';
+            document.getElementById('stop-randomize').style.display = 'none';
+            
+            // Reset progress
+            document.getElementById('progress-fill').style.width = '0%';
+            
+            // Tampilkan hasil
+            const drawnCount = Object.keys(drawnResults).length;
+            alert(`Acakan selesai! ${drawnCount} peserta telah diacak.`);
+        }
+        
+        // Fungsi untuk menghentikan batch processing
+        function stopBatchProcessingFunc() {
+            if (isBatchProcessing) {
+                stopBatchProcessing = true;
+                document.getElementById('stop-randomize').textContent = 'Menghentikan...';
+            }
+        }
+        
+        // Fungsi untuk reset semua hasil
+        function resetAllResults() {
+            if (Object.keys(drawnResults).length === 0) {
+                alert('Belum ada hasil yang bisa direset!');
+                return;
+            }
+            
+            if (confirm('Apakah Anda yakin ingin mereset semua hasil acakan? Semua peserta akan bisa mengacak ulang.')) {
+                drawnResults = {};
+                localStorage.setItem('kadoDrawnResults', JSON.stringify(drawnResults));
+                
+                displayParticipants();
+                displayDrawnResults();
+                
+                alert('Semua hasil acakan berhasil direset!');
+            }
+        }
+        
         // Fungsi untuk export hasil ke PDF
         function exportResultsToPDF() {
             if (Object.keys(drawnResults).length === 0) {
@@ -1253,25 +1528,15 @@
             doc.save(fileName);
             
             // Tampilkan alert
-            const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert alert-success';
-            alertDiv.innerHTML = `<p>✅ Hasil acakan berhasil diexport ke PDF!</p>`;
-            alertDiv.style.position = 'fixed';
-            alertDiv.style.top = '20px';
-            alertDiv.style.right = '20px';
-            alertDiv.style.zIndex = '9999';
-            alertDiv.style.maxWidth = '300px';
-            
-            document.body.appendChild(alertDiv);
-            
-            setTimeout(() => {
-                alertDiv.remove();
-            }, 3000);
+            alert('✅ Hasil acakan berhasil diexport ke PDF!');
         }
         
         // Event Listeners
         document.getElementById('jackpotButton').addEventListener('click', startJackpotAnimation);
         document.getElementById('exportPdfBtn').addEventListener('click', exportResultsToPDF);
+        document.getElementById('randomize-all').addEventListener('click', randomizeAllParticipants);
+        document.getElementById('stop-randomize').addEventListener('click', stopBatchProcessingFunc);
+        document.getElementById('reset-all').addEventListener('click', resetAllResults);
         
         document.getElementById('closeModal').addEventListener('click', () => {
             document.getElementById('jackpotModal').classList.add('hidden');
